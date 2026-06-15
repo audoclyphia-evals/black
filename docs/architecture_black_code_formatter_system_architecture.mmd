@@ -1,0 +1,46 @@
+flowchart TB
+    %% source: context #1, #2, #3
+    
+    subgraph External_Clients [External Clients]
+        User([User])
+        GitHub_Actions([GitHub Actions])
+        BlackDClient([BlackD Client])
+    end
+    
+    subgraph Entry_Points [Entry Points]
+        CLI[CLI Entry Point<br/>src/black/__main__.py]
+        BlackD_Server[BlackD Web Server<br/>src/blackd/__init__.py]
+        GitHub_Action[GitHub Action<br/>action/main.py]
+    end
+    
+    subgraph Core_Engine [Core Formatting Engine]
+        Formatting_Logic[Formatting Logic<br/>src/black/__init__.py]
+        Parallel_Formatting[Parallel Formatting<br/>src/black/concurrency.py]
+        Configuration[Configuration Management<br/>src/black/files.py]
+    end
+    
+    subgraph Parser_Tier [Parser Infrastructure]
+        Parser[blib2to3 Parser<br/>src/blib2to3/pgen2/driver.py]
+        Tokenizer[Tokenizer<br/>src/blib2to3/pgen2/tokenize.py]
+    end
+    
+    subgraph Storage_Tier [Storage and Cache]
+        Cache[(File Cache<br/>src/black/cache.py)]
+    end
+    
+    %% Relationships
+    User -->|runs black| CLI
+    User -->|HTTP| BlackDClient
+    GitHub_Actions -->|triggers| GitHub_Action
+    BlackDClient -->|HTTP POST| BlackD_Server
+    
+    GitHub_Action -->|subprocess| CLI
+    CLI -->|invokes| Formatting_Logic
+    BlackD_Server -->|uses| Formatting_Logic
+    
+    Formatting_Logic -->|parses code| Parser
+    Formatting_Logic -->|caches files| Cache
+    Formatting_Logic -->|reads config| Configuration
+    Formatting_Logic -->|parallel jobs| Parallel_Formatting
+    
+    Parser -->|tokenizes| Tokenizer

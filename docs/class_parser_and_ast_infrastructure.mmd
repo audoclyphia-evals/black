@@ -1,0 +1,48 @@
+---
+config:
+  layout: elk
+---
+classDiagram
+    class Visitor {
+        <<Abstract>>
+        +traverse(node: Node)* : void
+    }
+    class DebugVisitor {
+        +traverse(node: Node) : void
+        +display(node: Node) : void
+    }
+    class LineGenerator {
+        +generateTree(tree: Node) : List~Line~
+        +visitDefault(node: Node, *args: Any) : None
+    }
+    class Line {
+        -leaves: List~Leaf~
+        -comment: Comment?
+        +appendLeaf(leaf: Leaf) : void
+        +isCommentOnly() : bool
+    }
+    class BracketTracker {
+        -depth: int
+        -delimiterPriority: int
+        +mark(op: Token) : void
+        +any_open_for_or_lambda() : bool
+        +any_open_brackets() : bool
+        +max_delimiter_priority() : int
+    }
+    class InvalidInput {
+        <<Exception>>
+        +message: str
+        +line: int?
+    }
+    class ASTSafetyError {
+        <<Exception>>
+        +message: str
+        +ast: Node?
+    }
+
+    Visitor <|-- DebugVisitor
+    LineGenerator ..> Visitor : implements
+    LineGenerator ..> BracketTracker : uses
+    LineGenerator ..> Line : creates
+    LineGenerator ..> InvalidInput : throws
+    LineGenerator ..> ASTSafetyError : throws

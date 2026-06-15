@@ -1,0 +1,24 @@
+sequenceDiagram
+    autonumber
+    actor User as "User"
+    box "Backend Services"
+        participant Repo as "Repository Service"
+        participant Cluster as "Cluster Service"
+        participant Relational as "Relational Service"
+        participant Semantic as "Semantic Service"
+    end
+
+    User->>+Repo: get_repository_overview(repo_id)
+    Repo-->>-User: overview data
+
+    User->>+Cluster: get_cluster_summaries(repo_id)
+    Cluster-->>-User: 277 records
+
+    User->>+Relational: batch:module_hierarchy(repo_id)
+    Relational-->>-User: 37 records
+
+    User->>+Relational: Entry Points(repo_id)
+    Relational-->>-User: entry points dict
+
+    User->>+Semantic: semantic_search(params)
+    Semantic-->>-User: 15 records
