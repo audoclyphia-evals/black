@@ -1,0 +1,83 @@
+---
+config:
+  layout: elk
+---
+classDiagram
+    direction TB
+    namespace config {
+        class Mode {
+            Stores configuration settings
+        }
+        class Feature {
+            <<Enumeration>>
+            Python language features
+        }
+        class TargetVersion {
+            <<Enumeration>>
+            Python versions
+        }
+        class WriteBack {
+            <<Enumeration>>
+            Output modes
+        }
+    }
+    namespace linegen {
+        class LineGenerator {
+            Generates reformatted lines
+        }
+        class Line {
+            Holds leaves and comments
+        }
+        class CannotSplit {
+            Exception for split failures
+        }
+        class BracketTracker {
+            Tracks bracket depth
+        }
+        class EmptyLineTracker {
+            Calculates empty lines
+        }
+    }
+    namespace trans {
+        class StringTransformer {
+            <<Abstract>>
+            Base class for transformers
+        }
+        class StringMerger {
+            Merges adjacent strings
+        }
+        class CannotTransform {
+            Base error class
+        }
+    }
+    namespace lines {
+        class RHSResult {
+            Stores split results
+        }
+        class LinesBlock {
+            Holds formatted lines
+        }
+        class ProtoComment {
+            Comment representation
+        }
+    }
+    namespace visitors {
+        class Visitor {
+            AST traversal base
+        }
+        class DebugVisitor {
+            Debug AST printer
+        }
+    }
+    CannotSplit --|> CannotTransform
+    StringMerger --|> StringTransformer
+    DebugVisitor --|> Visitor
+    LineGenerator --> Line
+    LineGenerator --> BracketTracker
+    LineGenerator --> EmptyLineTracker
+    StringTransformer --> CannotTransform
+    Mode --> Feature
+    Mode --> TargetVersion
+    Line --> ProtoComment
+    LinesBlock --> Line
+    RHSResult --> Line

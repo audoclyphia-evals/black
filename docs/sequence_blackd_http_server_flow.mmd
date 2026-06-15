@@ -1,0 +1,47 @@
+sequenceDiagram
+    %% Sequence diagram for blackd HTTP server and client interaction
+    %% Based on Cluster_8 and Cluster_171 context
+
+    participant Client as "Client"
+    participant BlackDClient as "BlackDClient"
+    participant CorsMiddleware as "CORS_Middleware"
+    participant HandleFunction as "Handle_Function"
+
+    %% Client uses BlackDClient to send formatting request
+    Client->>BlackDClient: format_code(unformatted_code)
+    
+    %% BlackDClient sends HTTP POST to server with headers
+    BlackDClient->>CorsMiddleware: POST with code and headers
+    
+    %% CORS Middleware checks origin and handles preflight
+    alt Origin header present and allowed
+        alt Preflight OPTIONS request
+            CorsMiddleware-->>BlackDClient: 200 OK with CORS headers
+            BlackDClient-->>Client: Return formatted code
+        else Normal POST request
+            CorsMiddleware->>HandleFunction: Call handler(request)
+            
+            %% Handle function processes request
+            HandleFunction->>HandleFunction: Check protocol version header
+            
+            alt Version 1 supported
+                HandleFunction->>HandleFunction: Parse mode from headers
+                HandleFunction->>HandleFunction: Format code with black
+                HandleFunction-->>CorsMiddleware: 200 OK with formatted code
+                CorsMiddleware-->>BlackDClient: Response with CORS headers
+                BlackDClient-->>Client: Return formatted code
+            else Version not supported
+                HandleFunction-->>CorsMiddleware: 501 Not Implemented
+                CorsMiddleware-->>BlackDClient: Error response
+                BlackDClient-->>Client: Return error
+            end
+        end
+    else Origin not allowed
+        CorsMiddleware-->>BlackDClient: 403 Forbidden
+        BlackDClient-->>Client: Return error
+    else No Origin header
+        CorsMiddleware->>HandleFunction: Call handler(request)
+        HandleFunction-->>CorsMiddleware: Response
+        CorsMiddleware-->>BlackDClient: Response without CORS headers
+        BlackDClient-->>Client: Return formatted code
+    end
