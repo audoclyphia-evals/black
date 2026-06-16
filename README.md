@@ -1,37 +1,37 @@
-# Black
+#Black
 
-The uncompromising Python code formatter
+The uncompromising Python code formatter.
 
 ![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)
 
-Black is a Python code formatter that automatically reformats your code to follow a consistent style, so you can stop arguing about formatting and focus on what matters. It parses your code into an AST, applies formatting transformations, and outputs code that is deterministic and reproducible — no configuration needed.
+Black is a deterministic, opinionated Python code formatter that frees you from hand-formatting minutiae. By running Black on your code, you get consistent formatting across all projects, smaller diffs in code reviews, and zero time spent arguing about style. It supports Python 3.8+ and works beautifully in editors, CI pipelines, and pre-commit hooks.
+
+[Chat on Discord](https://discord.gg/RtVdv86PrH) · [Documentation](https://black.readthedocs.io/en/stable/) · [Latest Release](https://github.com/psf/black/releases/latest)
+
+> “Any color you like.” — Black is opinionated so you don't have to be.
 
 ---
 
-## Features
+## ✨ Features
 
-- **Zero-configuration formatting** — Black makes opinionated style decisions so you don't have to, producing consistent output across your entire codebase.
-- **Preview mode** — Opt-in to upcoming style changes including long string splitting, dictionary value formatting, power operator hugging, and parenthesized context managers.
-- **Line range formatting** — Format only specific line ranges within a file, useful for formatting changes in version control diffs without touching the rest of the file.
-- **`fmt: skip` directive handling** — Exclude specific lines or blocks from formatting using `# fmt: skip` comments, giving you control over edge cases.
-- **Redundant parentheses removal** — Automatically strips unnecessary parentheses from expressions, assignments, return annotations, and except clauses.
-- **Docstring blank line handling** — Enforces consistent blank line rules inside docstrings, with special handling for `.pyi` stub files.
-- **Import line collapse** — Collapses or preserves import formatting based on line length and style preferences.
-- **Numeric literal formatting** — Normalizes numeric literals including hex, scientific notation, and underscore separators for readability.
-- **Python 3.12+ type parameter support** — Formats the new generic class and function type parameter syntax with proper line breaking and trailing comma handling.
-- **blackd HTTP server** — Run Black as an HTTP service for integration with editors, CI pipelines, and other tools that need on-demand formatting.
-- **Concurrent formatting** — Formats multiple files in parallel for speed on large codebases.
-- **Jupyter notebook support** — Formats code cells within `.ipynb` notebooks, including handling of IPython magic commands.
+- **Deterministic formatting** — Black always produces the same output for the same input, no configuration debates needed
+- **Fast and stable** — Reformats files in-place with a guaranteed stable output (idempotent)
+- **Preview mode** — Opt into the latest formatting styles with `--preview` to see upcoming changes
+- **Line-range formatting** — Format only specific line ranges with `--line-ranges`, perfect for partial file formatting
+- **Jupyter notebook support** — Formats `.ipynb` files, handling IPython magic commands transparently
+- **`fmt: off` / `fmt: on` directives** — Exclude blocks of code from formatting with inline comments
+- **CLI and HTTP API** — Use the `black` command-line tool or the `blackd` HTTP server for editor integration
+- **GitHub Action** — Ready-to-use action for CI workflows that installs Black automatically
+- **pyproject.toml configuration** — Configure Black's options like line length and target versions in your project's config file
+- **Caching** — Avoids reformatting unchanged files by caching formatted file signatures
 
 ---
 
 ## Requirements
 
-- Python 3.8 or higher
-- pip (Python package manager)
-- Git (for cloning the repository and development workflows)
-
----
+- **Python 3.8 or higher** — Black runs on CPython 3.8+
+- **pip** (Python package manager) — for installation
+- **Git** — recommended for version control integration and pre-commit hooks
 
 ## Installation
 
@@ -41,148 +41,455 @@ Install Black from PyPI using pip:
 pip install black
 ```
 
-To install from source, clone the repository and install in development mode:
+To install with Jupyter notebook support:
+
+```bash
+pip install "black[jupyter]"
+```
+
+To install for development (from source):
 
 ```bash
 git clone https://github.com/psf/black.git
 cd black
-pip install -e .
+pip install -e ".[dev]"
 ```
 
-Verify your installation:
+To verify the installation:
 
 ```bash
 black --version
 ```
 
----
+## 🚀 Quick Start
 
-## Quick Start
-
-After installation, you can immediately begin formatting your Python code. Here are some common operations:
-
-Format a single file:
+Format a single Python file or entire directory in seconds:
 
 ```bash
+# Format a single file and check the diff
+black --diff my_script.py
+
+# Format a file in-place
 black my_script.py
-```
 
-Format an entire directory:
-
-```bash
+# Format an entire directory
 black src/
-```
 
-Check formatting without making changes (useful in CI):
-
-```bash
+# Check if files are formatted correctly (exit code only)
 black --check src/
-```
-
-Format inline from Python:
-
-```python
-import black
-
-source = """
-x  =  1
-y   =    2
-z =     3
-"""
-
-mode = black.Mode(target_versions={black.TargetVersion.PY312})
-formatted = black.format_str(source, mode=mode)
-print(formatted)
-# x = 1
-# y = 2
-# z = 3
 ```
 
 ---
 
 ## Usage
 
-### Command-Line Interface
-
-The `black` command formats files in place and prints a summary of changes.
+### Format a single file
 
 ```bash
-black src/ tests/
+black my_script.py
 ```
 
-To generate a diff without modifying files, use the `--diff` flag:
+### Format with a custom line length
 
 ```bash
-black --diff my_module.py
+black --line-length 100 my_script.py
 ```
 
-### Targeting Specific Python Versions
-
-Black can optimize formatting for specific Python versions. Use the `--target-version` flag:
-
-```bash
-black --target-version py312 src/
-```
-
-Supported versions include `py27`, `py38`, `py39`, `py310`, `py311`, and `py312`.
-
-### Using Preview Features
-
-Enable preview mode to access upcoming style changes, such as long string splitting and dictionary value formatting. These features may become the default in future releases.
+### Preview upcoming formatting styles
 
 ```bash
 black --preview src/
 ```
 
-### Using Line Ranges
-
-Format only specific lines within a file with the `--lines` flag:
+### Exclude specific files or patterns
 
 ```bash
-black --lines 10-20 my_file.py
+black --exclude "/(\.direnv|\.eggs|\.git|\.hg|\.mypy_cache|\.nox|\.tox|\.venv|_build|buck-out|build|dist)/" src/
 ```
 
-This is particularly useful when formatting code sections identified by a linter or version control diff.
+### Use in pre-commit hooks
 
-### Running the HTTP Server (blackd)
+```yaml
+# .pre-commit-config.yaml
+repos:
+  - repo: https://github.com/psf/black
+    rev: 24.3.0
+    hooks:
+      - id: black
+        language_version: python3.12
+```
 
-The `blackd` server exposes Black's formatting capabilities as a web service, which is useful for editor integrations and CI pipelines. Start the server with:
+### Format via the blackd HTTP server
 
 ```bash
-python -m blackd
+# Start the server
+blackd --bind-host 127.0.0.1 --bind-port 45484
+
+# Send code to format (example with curl)
+curl --data 'x=1' http://127.0.0.1:45484
 ```
 
-Then format code via HTTP requests. For more details, see the [Blackd HTTP API Conceptual Guide](API.md).
+### Format specific line ranges
+
+```bash
+# Only format lines 10 through 20
+black --line-ranges 10-20 my_script.py
+```
+
+### Use with IPython/Jupyter notebooks
+
+```bash
+black --jupyter notebook.ipynb
+```
+
+### Safe mode and stability
+
+By default, Black runs in safe mode, which verifies that the formatted output is AST-equivalent to the original source. Use `--fast` to skip this check for faster formatting:
+
+```bash
+black --fast src/
+```
 
 ---
 
-## Project Overview
+## Overview
 
-Black is organized into three main packages under `src/`:
+Black is a single-purpose tool: it reformats Python code to conform to a consistent, uncompromising style. The codebase is organized into three main packages under `src/`:
 
-- **`black`** — The core formatting engine, including parsing, line generation, bracket tracking, string transformations, caching, and configuration management.
-- **`blackd`** — An HTTP server that exposes Black's formatting capabilities as a web service, along with a client library.
-- **`blib2to3`** — A fork of Python's `lib2to3` parser, providing the grammar definitions, tokenizer, and syntax tree infrastructure that Black uses to parse Python source code.
+- **`black/`** — The core formatting engine, CLI, configuration, caching, and file handling. This is where the parsing, line generation, bracket tracking, comment normalization, string transformation, and numeric literal formatting logic lives. It also includes a Rust-inspired `Ok`/`Err` result type (`rusty.py`) for structured error handling.
+- **`blackd/`** — An aiohttp-based HTTP server that exposes Black's formatting capabilities as a web API, complete with CORS middleware and a Python client for editor integration.
+- **`blib2to3/`** — A vendored, modified version of Python's lib2to3 parser and tokenizer, which Black uses to parse source code into syntax trees.
 
-Supporting directories include `scripts/` for release automation, `action/` for the GitHub Action integration, and `tests/` with an extensive suite of formatting test cases.
+Supporting these are scripts under `scripts/` for release automation (including calendar versioning from git tags), documentation validation, JSON schema generation for configuration, and fuzzing. A GitHub Action lives in `action/` for CI integration, with automatic version detection from git tags or pyproject.toml. The exhaustive test suite lives in `tests/` with hundreds of case files covering edge cases from docstrings and comments to pattern matching and f-strings.
+
+### Architecture Diagram
+
+```mermaid
+flowchart TB
+    %% Architecture diagram for Black code formatter
+    %% Source: Context #2, #3, #4
+
+    subgraph External_Entry_Points [External Entry Points]
+        user([User / Developer]) -->|CLI command| cli[black CLI]
+        user -->|HTTP request| blackd[blackd HTTP Server]
+        gh_action[GitHub Action] -->|automated run| cli
+    end
+
+    subgraph Core_Formatting_Engine [Core Formatting Engine]
+        cli[black CLI] -->|invokes| format_engine[Format Engine]
+        blackd -->|invokes| format_engine
+        format_engine -->|parses| parser[blib2to3 Parser]
+        format_engine -->|line generation| linegen[Line Generator]
+        format_engine -->|bracket tracking| brackets[Bracket Tracker]
+        format_engine -->|comment handling| comments[Comment Handler]
+        format_engine -->|string transforms| trans[String Transformer]
+        format_engine -->|numeric formatting| numerics[Numeric Formatter]
+        format_engine -->|ipynb support| ipynb[IPython Magics Handler]
+        format_engine -->|range formatting| ranges[Range Formatter]
+    end
+
+    subgraph Supporting_Modules [Supporting Modules]
+        format_engine -->|file ops| files[File Handler]
+        format_engine -->|cache| cache[Cache Manager]
+        format_engine -->|output| output[Output / Reporter]
+        format_engine -->|config| mode[Mode Config]
+        format_engine -->|parsing| parsing[Parsing Utilities]
+        format_engine -->|concurrency| concurrency[Concurrency Handler]
+    end
+
+    subgraph Storage [Storage]
+        cache -->|reads/writes| cache_db[(File System Cache)]
+        files -->|reads| pyproject[(pyproject.toml)]
+    end
+
+    subgraph Testing_and_Scripts [Testing & Scripts]
+        tests[Test Suites] -->|test| format_engine
+        scripts[Utility Scripts] -->|automate| format_engine
+    end
+```
+
+### Core Formatting Pipeline
+
+```mermaid
+classDiagram
+    direction TB
+
+    %% Group by module namespace (source files)
+    
+    namespace mode {
+        class Mode {
+        }
+        class TargetVersion {
+            <<Enumeration>>
+        }
+        class Feature {
+            <<Enumeration>>
+        }
+        class Preview {
+            <<Enumeration>>
+        }
+    }
+
+    namespace lines {
+        class Line {
+        }
+        class RHSResult {
+        }
+        class LinesBlock {
+        }
+        class EmptyLineTracker {
+        }
+    }
+
+    namespace linegen {
+        class LineGenerator {
+        }
+        class CannotSplit {
+            <<Exception>>
+        }
+    }
+
+    namespace brackets {
+        class BracketTracker {
+        }
+        class BracketMatchError {
+            <<Exception>>
+        }
+    }
+
+    namespace trans {
+        class CannotTransform {
+            <<Exception>>
+        }
+        class CustomSplitMapMixin {
+            <<Mixin>>
+        }
+        class StringTransformer {
+            <<Abstract>>
+        }
+        class BaseStringSplitter {
+            <<Abstract>>
+        }
+        class StringSplitter {
+        }
+        class StringMerger {
+        }
+        class StringParenStripper {
+        }
+    }
+
+    %% Inheritance relationships (evidenced by hierarchy data)
+    CannotSplit --|> CannotTransform
+    StringMerger --|> StringTransformer
+    StringMerger --|> CustomSplitMapMixin
+    StringParenStripper --|> StringTransformer
+    BaseStringSplitter --|> StringTransformer
+    StringSplitter --|> BaseStringSplitter
+    StringSplitter --|> CustomSplitMapMixin
+
+    %% Association / usage relationships (inferred from purposes)
+    LineGenerator --> Mode : configures formatting
+    LineGenerator --> Line : generates
+    Line --> BracketTracker : tracks brackets
+    Line --> RHSResult : split result
+    EmptyLineTracker --> LinesBlock : manages blocks
+    EmptyLineTracker --> Line : processes
+    LinesBlock --> Mode : stored config
+    BracketTracker ..> BracketMatchError : raises
+    LineGenerator ..> CannotSplit : raises
+```
+
+### Formatting a Python File Flow
+
+```mermaid
+sequenceDiagram
+    autonumber
+    %% Diagram: Formatting a Python File Flow in Black
+
+    box "CLI Orchestration"
+        participant Main as "main()"
+        participant Sources as "get_sources()"
+    end
+
+    box "Per-File Processing"
+        participant ReformatOne as "reformat_one()"
+        participant FileInPlace as "format_file_in_place()"
+        participant FileContents as "format_file_contents()"
+    end
+
+    box "Formatting Engine"
+        participant FormatStr as "format_str()"
+        participant FormatOnce as "_format_str_once()"
+        participant Parser as "lib2to3_parse()"
+    end
+
+    Main->>Sources: get_sources(root, src, ...)
+    Sources-->>Main: sources (set of Paths)
+    note over Main,Sources: Compute file set using include/exclude patterns
+
+    loop for each source path
+        Main->>+ReformatOne: reformat_one(src, mode, report)
+        ReformatOne->>+FileInPlace: format_file_in_place(src, mode, write_back)
+        note over FileInPlace: Checks .pyi suffix, sets mode.is_pyi
+
+        FileInPlace->>+FileContents: format_file_contents(contents, mode, fast)
+        note over FileContents: Handles .ipynb vs .py#59; calls format_str for Python
+
+        FileContents->>+FormatStr: format_str(contents, mode)
+        note over FormatStr: Public entry point for string formatting
+
+        FormatStr->>+FormatOnce: _format_str_once(contents, mode) [first pass]
+        FormatOnce->>+Parser: lib2to3_parse(normalized)
+        note over FormatOnce: Also calls decode_bytes() before parse
+        Parser-->>-FormatOnce: CST (concrete syntax tree)
+        FormatOnce->>FormatOnce: Generate lines from CST
+        FormatOnce-->>-FormatStr: formatted string
+
+        alt stability check (repeat if unstable)
+            FormatStr->>+FormatOnce: _format_str_once(result, mode) [second pass]
+            FormatOnce->>+Parser: lib2to3_parse(...)
+            Parser-->>-FormatOnce: CST
+            FormatOnce-->>-FormatStr: final string
+        end
+
+        FormatStr-->>-FileContents: formatted string
+        FileContents-->>-FileInPlace: formatted string
+
+        FileInPlace->>FileInPlace: Write back or produce diff (based on WriteBack)
+        FileInPlace-->>-ReformatOne: changed (bool)
+        ReformatOne-->>-Main: result
+    end
+```
+
+### Blackd Server Request Handling
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Client as "HTTP Client"
+    participant BlackdServer as "Blackd Server"
+    participant BlackCore as "black.format_str"
+
+    %% Source: src/blackd/__init__.py defines handle and parse_mode (Context #4)
+    %% Source: src/black/__init__.py contains format_str (Context #2)
+
+    Client->>+BlackdServer: POST / (source code, headers)
+    note over BlackdServer: Parse headers: X-Line-Length, X-Mode, X-Python-Variant, X-Fast, X-Diff
+    BlackdServer->>BlackdServer: parse_mode(headers) → black.Mode
+    BlackdServer->>+BlackCore: format_str(source, mode, line_range)
+    BlackCore-->>-BlackdServer: formatted_code
+    alt No formatting needed (input unchanged)
+        BlackdServer-->>Client: 204 No Content
+    else Formatting applied
+        alt X-Diff header present
+            BlackdServer->>BlackdServer: Compute unified diff
+            BlackdServer-->>Client: 200 OK (diff)
+        else
+            BlackdServer-->>Client: 200 OK (formatted_code)
+        end
+    else Invalid request (e.g., bad header)
+        BlackdServer-->>Client: 400 Bad Request
+    end
+```
+
+### Cache Management
+
+```mermaid
+classDiagram
+    direction TB
+
+    %% Source: Context #5 (cache.py file details)
+    namespace cache {
+        class FileData {
+            <<NamedTuple>>
+        }
+        class Cache {
+            <<dataclass>>
+        }
+        class get_cache_dir {
+            <<Function>>
+        }
+        class get_cache_file {
+            <<Function>>
+        }
+    }
+
+    %% Relationships grounded in context (Cache uses FileData, depends on helper functions)
+    Cache --> FileData : uses
+    Cache ..> get_cache_file : depends on
+    Cache ..> get_cache_dir : depends on
+```
+
+### Configuration Loading
+
+```mermaid
+sequenceDiagram
+    %% Configuration Loading Flow for Black
+    %% Based on context #3 and #4: read_pyproject_toml, spellcheck_pyproject_toml_keys, validate_regex, parse_pyproject_toml, find_pyproject_toml, _load_toml, find_user_pyproject_toml
+    
+    autonumber
+    
+    participant Click as "Click CLI"
+    participant Read as "read_pyproject_toml"
+    participant Find as "find_pyproject_toml"
+    participant Parse as "parse_pyproject_toml"
+    participant Load as "_load_toml"
+    participant Spell as "spellcheck_pyproject_toml_keys"
+    participant Validate as "validate_regex"
+    
+    Click->>+Read: read_pyproject_toml(ctx, param, value)
+    alt value is None
+        Read->>+Find: find_pyproject_toml(src, stdin_filename)
+        Find->>Find: find_project_root(path_search_start)
+        alt pyproject.toml exists in project root
+            Find-->>Read: path to pyproject.toml
+        else not found
+            Find->>Find: find_user_pyproject_toml()
+            alt user config exists
+                Find-->>Read: path to user config
+            else not found
+                Find-->>Read: None
+            end
+        end
+    end
+    opt value is not None
+        Read->>+Parse: parse_pyproject_toml(value)
+        Parse->>+Load: _load_toml(path)
+        Load-->>-Parse: parsed TOML dict
+        Parse->>Parse: extract tool.black config
+        Parse->>Parse: infer target_version if missing
+        Parse-->>-Read: config dict
+        Read->>+Spell: spellcheck_pyproject_toml_keys(ctx, config_keys, path)
+        Spell->>Spell: compare keys against ctx.command.params
+        alt invalid keys found
+            Spell-->>Read: print warning
+        else all valid
+            Spell-->>Read: no action
+        end
+        Read->>Read: inject config into ctx.default_map
+    end
+    Read-->>-Click: config file path or None
+    
+    Click->>+Validate: validate_regex(ctx, param, value)
+    alt value is not None
+        Validate->>Validate: re_compile_maybe_verbose(value)
+        alt regex is valid
+            Validate-->>Click: compiled Pattern
+        else regex error
+            Validate-->>Click: raise click.BadParameter
+        end
+    else value is None
+        Validate-->>Click: None
+    end
+```
 
 ---
 
 ## 📚 Additional Documentation
 
-For more detailed information, see the following documentation:
+For more detailed information, refer to the following resources:
 
-- [System Architecture Documentation](ARCHITECTURE.md) — Provides a comprehensive overview of the system's components, their relationships, and data flow.
-- [Contribution Guidelines](CONTRIBUTING.md) — Essential for new contributors to understand how to participate in the project.
-- [Blackd HTTP API Conceptual Guide](API.md) — Explains how to use the blackd HTTP API at a high level, including request/response patterns and usage examples.
-- [Command-Line Interface Reference](CLI.md) — Offers detailed reference for the `black` command-line options and usage patterns.
-- [Testing Guide](TESTING.md) — Documents how to run tests, understand test structure, and write new tests.
-- [Development Setup and Workflow](DEVELOPMENT.md) — Guides developers through setting up the development environment and workflow for working on the project.
-
-The following diagrams provide visual overviews of Black's architecture and internals:
-
-- [System Architecture](docs/architecture_black_code_formatter_system_architecture.mmd) — High-level component overview.
-- [Core Formatting Engine Classes](docs/class_core_formatting_engine_classes.mmd) — Class diagram for core formatting structures.
-- [Parser and AST Infrastructure](docs/class_parser_and_ast_infrastructure.mmd) — Class diagram for the `blib2to3` parser.
-- [File Formatting Pipeline](docs/sequence_file_formatting_pipeline.mmd) — End-to-end formatting flow sequence.
-- [Blackd HTTP Server Flow](docs/sequence_blackd_http_server_flow.mmd) — Request processing flow for the blackd server.
+- **Official documentation** – [Read the Docs](https://black.readthedocs.io/en/stable/) provides comprehensive guides, usage examples, and API reference.
+- **Source code** – The repository itself contains inline comments and docstrings that explain module purposes, especially in `src/black/`, `src/blackd/`, and `src/blib2to3/`.
+- **Contribution guidelines** – See [CONTRIBUTING.md](https://github.com/psf/black/blob/main/CONTRIBUTING.md) for setup, coding standards, and testing practices.
+- **Command-line reference** – Run `black --help` or consult the CLI section of the official documentation for all options.
