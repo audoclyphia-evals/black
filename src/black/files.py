@@ -158,46 +158,26 @@ def infer_target_version(
     requires_python = project_metadata.get("requires-python", None)
     if requires_python is not None:
         try:
-            return parse_req_python_version(requires_python)
+            version = Version(requires_python)
+            if version.release[0] == 3:
+                try:
+                    return [TargetVersion(version.release[1])]
+                except (IndexError, ValueError):
+                    pass
         except InvalidVersion:
             pass
         try:
-            return parse_req_python_specifier(requires_python)
+            specifier_set = strip_specifier_set(SpecifierSet(requires_python))
+            if specifier_set:
+                target_version_map = {f"3.{v.value}": v for v in TargetVersion}
+                compatible_versions: list[str] = list(
+                    specifier_set.filter(target_version_map)
+                )
+                if compatible_versions:
+                    return [target_version_map[v] for v in compatible_versions]
         except (InvalidSpecifier, InvalidVersion):
             pass
 
-    return None
-
-
-def parse_req_python_version(requires_python: str) -> list[TargetVersion] | None:
-    """Parse a version string (i.e. ``"3.7"``) to a list of TargetVersion.
-
-    If parsing fails, will raise a packaging.version.InvalidVersion error.
-    If the parsed version cannot be mapped to a valid TargetVersion, returns None.
-    """
-    version = Version(requires_python)
-    if version.release[0] != 3:
-        return None
-    try:
-        return [TargetVersion(version.release[1])]
-    except (IndexError, ValueError):
-        return None
-
-
-def parse_req_python_specifier(requires_python: str) -> list[TargetVersion] | None:
-    """Parse a specifier string (i.e. ``">=3.7,<3.10"``) to a list of TargetVersion.
-
-    If parsing fails, will raise a packaging.specifiers.InvalidSpecifier error.
-    If the parsed specifier cannot be mapped to a valid TargetVersion, returns None.
-    """
-    specifier_set = strip_specifier_set(SpecifierSet(requires_python))
-    if not specifier_set:
-        return None
-
-    target_version_map = {f"3.{v.value}": v for v in TargetVersion}
-    compatible_versions: list[str] = list(specifier_set.filter(target_version_map))
-    if compatible_versions:
-        return [target_version_map[v] for v in compatible_versions]
     return None
 
 

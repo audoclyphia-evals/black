@@ -109,9 +109,6 @@ class WriteBack(Enum):
         return cls.DIFF if diff else cls.YES
 
 
-# Legacy name, left for integrations.
-FileMode = Mode
-
 
 def read_pyproject_toml(
     ctx: click.Context, param: click.Parameter | None, value: str | None

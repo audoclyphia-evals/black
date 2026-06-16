@@ -219,7 +219,7 @@ async def format_code(
     *,
     req_str: str,
     fast: bool,
-    mode: black.FileMode,
+    mode: black.Mode,
     then: datetime,
     only_diff: bool,
     executor: Executor,
@@ -281,7 +281,7 @@ def parse_mode(headers: MultiMapping[str]) -> black.Mode:
                     f"Invalid value for {ENABLE_UNSTABLE_FEATURE}: {piece}",
                 ) from None
 
-    return black.FileMode(
+    return black.Mode(
         target_versions=versions,
         is_pyi=pyi,
         line_length=line_length,

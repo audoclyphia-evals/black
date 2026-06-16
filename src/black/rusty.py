@@ -16,6 +16,12 @@ class Ok(Generic[T]):
     def ok(self) -> T:
         return self._value
 
+    def is_ok(self) -> bool:
+        return True
+
+    def is_err(self) -> bool:
+        return False
+
 
 class Err(Generic[E]):
     def __init__(self, e: E) -> None:
@@ -23,6 +29,12 @@ class Err(Generic[E]):
 
     def err(self) -> E:
         return self._e
+
+    def is_ok(self) -> bool:
+        return False
+
+    def is_err(self) -> bool:
+        return True
 
 
 Result = Union[Ok[T], Err[E]]

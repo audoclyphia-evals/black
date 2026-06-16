@@ -148,3 +148,11 @@ class Cache:
             os.replace(f.name, self.cache_file)
         except OSError:
             pass
+
+    def clear(self) -> None:
+        """Delete the cache file and reset in-memory file data."""
+        self.file_data.clear()
+        try:
+            self.cache_file.unlink(missing_ok=True)
+        except OSError:
+            pass

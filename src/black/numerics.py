@@ -13,6 +13,11 @@ def format_hex(text: str) -> str:
     return f"{before}{after.upper()}"
 
 
+def format_octal(text: str) -> str:
+    before, after = text[:2], text[2:]
+    return f"0o{after}"
+
+
 def format_scientific_notation(text: str) -> str:
     """Formats a numeric string utilizing scientific notation"""
     before, after = text.split("e")
@@ -47,9 +52,10 @@ def normalize_numeric_literal(leaf: Leaf) -> None:
 
     All letters used in the representation are normalized to lowercase."""
     text = leaf.value.lower()
-    if text.startswith(("0o", "0b")):
-        # Leave octal and binary literals alone.
+    if text.startswith("0b"):
         pass
+    elif text.startswith("0o"):
+        text = format_octal(text)
     elif text.startswith("0x"):
         text = format_hex(text)
     elif "e" in text:
