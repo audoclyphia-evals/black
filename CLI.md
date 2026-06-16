@@ -1,209 +1,294 @@
 # Command-Line Interface Reference
 
-> The uncompromising Python code formatter
-
 ![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)
 
-Black is a Python code formatter that enforces a consistent style by parsing and re-formatting your code. It provides two primary CLI commands: `black` for formatting Python files directly, and `blackd` for running an HTTP formatting server. Configuration is managed through command-line options or a `pyproject.toml` file, and Black supports targeting specific Python versions, line range formatting, preview-mode features, and more.
+> “Any color you like.”
 
----
-
-## Overview
-
-Black's CLI offers two entry points:
-
-| Command | Module | Purpose |
-|---------|--------|---------|
-| `black` | `src/black/__main__.py` | Formats Python source files in-place, as a diff, or in check mode |
-| `blackd` | `src/blackd/__main__.py` | Runs an HTTP server that accepts Python code and returns formatted output |
-
-At its core, the `black` command uses the [`Mode`](src/black/mode.py) class to store all formatting configuration — target Python versions, line length, preview features, and more. Output behavior is controlled by the [`WriteBack`](src/black/__init__.py) enum, which determines whether formatted code is written back to files, displayed as a diff, or checked without modifying files.
-
-For a deeper understanding of how the formatting pipeline works end-to-end, see [Architecture](ARCHITECTURE.md). For configuration file setup, see [Development Setup](DEVELOPMENT.md).
-
----
+Black is the uncompromising Python code formatter. By using it, you agree to cede control over minutiae of hand-formatting. In return, Black gives you speed, determinism, and freedom from `pycodestyle` nagging about formatting. You will save time and mental energy for more important matters.
 
 ## CLI Reference
 
-### `black`
+Black is primarily used through its command-line interface. The `black` command formats Python code according to a deterministic set of rules, producing the smallest diffs possible and ensuring consistent style across your entire project.
 
-The primary command for formatting Python source code. Black parses your source into a syntax tree using its bundled [`blib2to3`](src/blib2to3/) parser, applies formatting rules, and writes the result back.
-
-```bash
-black [OPTIONS] [SRC ...]
-```
-
-**Core Options:**
-
-| Option | Description | Default |
-|--------|-------------|---------|
-| `SRC` | One or more files or directories to format | — |
-| `--check` | Don't write changes, just return the exit code. Exit code 0 means no changes needed. | Off |
-| `--diff` | Don't write changes, print a diff showing what would change | Off |
-| `--color` / `--no-color` | Show colored output (when supported by terminal) | Auto-detected |
-
-**Configuration Options** (also settable via [`pyproject.toml`](src/black/files.py)):
-
-| Option | Description | Default |
-|--------|-------------|---------|
-| `--line-length` / `-l` | Maximum characters per line | Defined in [`src/black/const.py`](src/black/const.py) |
-| `--target-version` / `-t` | Target Python version(s). Can be specified multiple times. Values from [`TargetVersion`](src/black/mode.py) enum | All supported versions |
-| `--preview` | Enable preview style features as defined in the [`Preview`](src/black/mode.py) enum | Off |
-| `--no-preview` | Disable preview style features | — |
-
-**Line Range Formatting** (implemented in [`src/black/ranges.py`](src/black/ranges.py)):
-
-| Option | Description |
-|--------|-------------|
-| `--line-ranges` | Format only the specified line ranges (e.g., `--line-ranges 10-20`) |
-
-**Caching** (managed by [`Cache`](src/black/cache.py)):
-
-| Option | Description | Default |
-|--------|-------------|---------|
-| `--cache-dir` | Directory for the cache used to avoid reformatting unchanged files | Platform-dependent |
-| `--no-cache` | Do not use the cache | Off |
-
-**Output Control:**
-
-| Option | Description | Default |
-|--------|-------------|---------|
-| `--output-file` | Write output to this file instead of stdout (when not formatting in-place) | — |
-| `--force-exclude` | Exclude paths even if they match patterns from config | Off |
-
-**`--check` and `--diff`** are mutually useful for CI pipelines — `--check` gates whether Black would make changes, and `--diff` shows exactly what would change without modifying files.
-
----
-
-### `blackd`
-
-An HTTP server that provides Black formatting as a service. Powered by [`aiohttp`](src/blackd/__init__.py), with CORS support via [`middlewares.py`](src/blackd/middlewares.py) and a corresponding [`BlackDClient`](src/blackd/client.py).
+### Basic Command
 
 ```bash
-blackd [OPTIONS]
+black [options] [FILE...]
 ```
+
+Format one or more Python files, or read from stdin by passing `-` as the filename.
 
 **Options:**
 
-| Option | Description | Default |
-|--------|-------------|---------|
-| `--host` | Host address to bind to | `127.0.0.1` |
-| `--port` | Port number to listen on | `4548` |
-| `--bind` | Alternative way to specify host and port | — |
+| Flag | Description | Default |
+|------|-------------|---------|
+| `-l, --line-length` | How many characters per line to allow | `88` |
+| `-t, --target-version` | Python versions that should be supported (e.g., `py39`, `py310`) | (inferred) |
+| `--pyi` | Format as a `.pyi` stub file | `false` |
+| `--ipynb` | Format Jupyter notebook files | `false` |
+| `-S, --skip-string-normalization` | Don't normalize string quotes or prefixes | `false` |
+| `-C, --skip-magic-trailing-comma` | Don't use trailing commas as a reason to split lines | `false` |
+| `--preview` | Enable potentially disruptive style changes that may be added to Black's default style in the next major release | `false` |
+| `--unstable` | Enable even more experimental features (use with caution) | `false` |
+| `--check` | Don't write the files back, just return the status. Return code 0 means nothing changed, 1 means some files were changed | `false` |
+| `--diff` | Don't write the files back, just output a diff for each file | `false` |
+| `--color` | Show colored diff output | `false` |
+| `--fast` / `--safe` | If `--fast`, skip AST safety checks after formatting | `--safe` |
+| `--required-version` | Require a specific version of Black to be running | (none) |
+| `--include` | A regular expression for files to include | `\.pyi?$` |
+| `--exclude` | A regular expression for files to exclude | `/(\.direnv|\.eggs|\.git|\.hg|\.mypy_cache|\.nox|\.tox|\.venv|\.svn|_build|buck-out|build|dist)/` |
+| `--extend-exclude` | Like `--exclude`, but adds to the default regex | (none) |
+| `--force-exclude` | Like `--exclude`, but files matching this regex are excluded even when passed explicitly | (none) |
+| `--stdin-filename` | The name of the file when passing it through stdin. Useful for shebang lines | (none) |
+| `-W, --workers` | Number of parallel workers | (auto-detected) |
+| `-q, --quiet` | Don't emit non-error messages | `false` |
+| `-v, --verbose` | Also emit messages about files that were not changed | `false` |
+| `--version` | Show the version and exit | |
+| `-h, --help` | Show help message and exit | |
 
-The server accepts Python source code via HTTP requests and returns the formatted output. It supports configuration through HTTP headers corresponding to the formatting options available in the `black` command. For a detailed conceptual guide, see [Blackd HTTP API](API.md).
+**Line Ranges:**
 
----
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--line-ranges` | When specified, Black will try to only format lines in these ranges. Use as `--line-ranges START-END` (can be repeated) | (none) |
+
+**Examples:**
+
+```bash
+# Format a single file
+black my_script.py
+
+# Format multiple files
+black src/ tests/
+
+# Check if files would be reformatted (exit code 1 if changes needed)
+black --check .
+
+# Show a diff of what would change
+black --diff my_script.py
+
+# Format with a custom line length
+black --line-length 100 my_script.py
+
+# Format for Python 3.10 and above
+black --target-version py310 my_script.py
+
+# Enable preview mode for upcoming style changes
+black --preview my_script.py
+
+# Format only specific line ranges
+black --line-ranges 10-20 --line-ranges 30-40 my_script.py
+
+# Format from stdin
+echo "x = 1+2" | black -
+```
+
+### Configuration via `pyproject.toml`
+
+Black reads configuration from a `[tool.black]` section in `pyproject.toml`. This is the recommended way to configure Black for your project.
+
+```toml
+[tool.black]
+line-length = 88
+target-version = ['py39', 'py310']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+    \.direnv
+  | \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.nox
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+```
+
+You can also specify a `required-version` to ensure a specific version of Black is used:
+
+```toml
+[tool.black]
+required-version = "24.0"
+```
+
+### GitHub Action
+
+Black provides a GitHub Action for CI/CD pipelines. The action installs Black and runs it on specified source files.
+
+```yaml
+- uses: psf/black@stable
+  with:
+    options: "--check --diff"
+    src: "./src"
+    version: "24.0"
+```
+
+The action supports the following inputs:
+
+| Input | Description | Default |
+|-------|-------------|---------|
+| `options` | Command-line options for Black | `""` |
+| `src` | Source files or directories to format | `""` |
+| `version` | Version of Black to install | (auto-detected) |
+| `use_pyproject` | Read version from `pyproject.toml` | `false` |
+| `jupyter` | Also install Jupyter notebook support | `false` |
+| `black_args` | (Deprecated) Alternative to `src` + `options` | `""` |
+| `output_file` | Write Black's output to a file | `""` |
+
+### Pre-commit Hook
+
+Black can be used as a pre-commit hook. Add this to your `.pre-commit-config.yaml`:
+
+```yaml
+repos:
+  - repo: https://github.com/psf/black
+    rev: 24.0.0
+    hooks:
+      - id: black
+        language_version: python3.11
+```
 
 ## Usage
 
-### Basic Formatting
+### Basic Usage
 
-Format a single file in-place:
-
-```bash
-black my_script.py
-```
-
-Format all Python files in a directory:
+The simplest way to use Black is to point it at a file or directory:
 
 ```bash
-black src/
+black my_project/
 ```
 
-### Check Without Modifying
+Black will recursively find all Python files in `my_project/` and format them in place. If a file is already correctly formatted, Black will skip it.
 
-Use `--check` in CI pipelines to verify code is already formatted:
+### Checking Without Changing
+
+To see which files would be changed without actually modifying them, use `--check`:
 
 ```bash
-black --check src/
-# Exit code 0 = all files formatted
-# Exit code 1 = some files need formatting
+black --check .
 ```
 
-Preview what Black would change without writing:
+This is useful in CI pipelines. The exit code will be:
+- `0`: All files are already formatted correctly
+- `1`: Some files would be reformatted
+- `123`: An internal error occurred
+
+### Viewing Diffs
+
+To see exactly what Black would change, use `--diff`:
 
 ```bash
 black --diff my_script.py
 ```
 
-### Line Range Formatting
-
-Format only a specific range of lines — useful when you've changed only part of a file:
+This outputs a unified diff showing the changes. Combine with `--color` for colored output:
 
 ```bash
-black --line-ranges 10-25 my_script.py
+black --diff --color my_script.py
 ```
 
-This is implemented in [`src/black/ranges.py`](src/black/ranges.py) and converts unchanged top-level statements to `STANDALONE_COMMENT` nodes to speed up processing. Test cases covering edge cases like decorators, fmt:off overlap, and exceeding ranges are in the [`tests/data/cases/line_ranges_*.py`](tests/data/cases/) files.
+### Formatting Specific Line Ranges
 
-### Targeting Specific Python Versions
-
-Restrict formatting to syntax compatible with specific Python versions:
+Black supports formatting only specific line ranges, which is useful for incremental adoption or focusing on recently changed code:
 
 ```bash
-black --target-version py38 --target-version py39 src/
+black --line-ranges 10-20 --line-ranges 30-40 my_script.py
 ```
 
-The `TargetVersion` enum in [`src/black/mode.py`](src/black/mode.py) defines all supported versions.
+This will only format lines 10-20 and 30-40 in `my_script.py`. Note that when using line ranges, the stable check (verifying that formatting is idempotent) is skipped for edge cases where the diff algorithm may produce incorrect new line ranges.
 
 ### Using Preview Mode
 
-Enable preview-style formatting features for access to newer style changes:
+Preview mode enables style changes that are being considered for the next major release. These changes are stable and tested, but may not yet be part of the default style:
 
 ```bash
-black --preview src/
+black --preview my_script.py
 ```
 
-Preview features — including long string splitting, dictionary value formatting, and power operator hugging — are individually controlled via the [`Preview`](src/black/mode.py) enum. Test cases for preview features live in `tests/data/cases/preview_*.py`.
-
-### Configuration via `pyproject.toml`
-
-Black reads configuration from `pyproject.toml` automatically, handled by [`src/black/files.py`](src/black/files.py). Example:
+You can also enable specific preview features in your `pyproject.toml`:
 
 ```toml
 [tool.black]
-line-length = 88
-target-version = ["py38", "py39"]
 preview = true
 ```
 
-A JSON schema for all configuration options is available via [`src/black/schema.py`](src/black/schema.py) and can be generated with [`scripts/generate_schema.py`](scripts/generate_schema.py).
+### Formatting Jupyter Notebooks
 
-### Running the blackd HTTP Server
+Black can format code cells in Jupyter notebooks (`.ipynb` files). It handles IPython magic commands by masking them before formatting and restoring them afterward:
 
-Start the formatting server:
+```bash
+black --ipynb my_notebook.ipynb
+```
+
+### Using the Cache
+
+Black caches formatted files to avoid reformatting unchanged files on subsequent runs. The cache is stored in a platform-appropriate cache directory and is invalidated when the Black version or mode changes. To bypass the cache, use `--no-cache` (if available) or run with `--check` which doesn't write to the cache.
+
+### Parallel Formatting
+
+Black can format multiple files in parallel using the `--workers` option:
+
+```bash
+black --workers 4 src/ tests/
+```
+
+By default, Black auto-detects the number of available CPU cores.
+
+### Integration with Editors
+
+Black can be integrated with most editors and IDEs. For example, to use Black with Visual Studio Code, add this to your `settings.json`:
+
+```json
+{
+  "python.formatting.provider": "black",
+  "editor.formatOnSave": true
+}
+```
+
+For other editors, see the [Black documentation](https://black.readthedocs.io/en/stable/) for integration guides.
+
+### Using the `blackd` HTTP Server
+
+Black also ships with `blackd`, a daemon that provides formatting via HTTP. This is useful for editor integrations and CI pipelines that want to avoid the startup cost of running Black as a subprocess.
+
+Start the daemon:
 
 ```bash
 blackd
-# or with options:
-blackd --host 0.0.0.0 --port 8080
 ```
 
-The server supports CORS requests through the middleware in [`src/blackd/middlewares.py`](src/blackd/middlewares.py). A Python client is available in [`src/blackd/client.py`](src/blackd/client.py) for programmatic access.
+By default, it listens on `http://localhost:45484`. Send a POST request with the code to format:
 
----
+```bash
+curl -X POST -H "Content-Type: text/x-python" --data "x = 1+2" http://localhost:45484
+```
 
-## Formatting Features
+The response will contain the formatted code. If no changes are needed, the server returns a `204 No Content` status.
 
-Black handles a wide range of formatting scenarios. Key capabilities include:
+For more details on `blackd`, see the [API documentation](API.md).
 
-- **`fmt: skip` directives** — Exclude specific lines or blocks from formatting (tested extensively in [`tests/data/cases/fmtskip*.py`](tests/data/cases/)).
-- **Redundant parentheses removal** — Strips unnecessary parentheses from assignments, conditionals, and function returns (see [`tests/data/cases/pep_572_remove_parens.py`](tests/data/cases/pep_572_remove_parens.py)).
-- **Docstring blank line handling** — Normalizes blank lines within docstrings, including `.pyi` files (see [`tests/data/cases/pyi_docstring_blank_lines_no_preview.py`](tests/data/cases/pyi_docstring_blank_lines_no_preview.py)).
-- **Import line collapse** — Collapses import lines where appropriate (see [`tests/data/cases/import_line_collapse.py`](tests/data/cases/import_line_collapse.py)).
-- **Numeric literal formatting** — Normalizes numeric literals (hex, scientific notation, underscores) (see [`tests/data/cases/numeric_literals.py`](tests/data/cases/numeric_literals.py)).
-- **Long string splitting** — Intelligent splitting of long string literals to fit within line length (see [`tests/data/cases/preview_long_strings.py`](tests/data/cases/preview_long_strings.py)).
-- **Line range formatting** — Format only specific lines, with edge-case handling for decorators, fmt:off blocks, and indentation (see [`tests/data/cases/line_ranges_*.py`](tests/data/cases/)).
+### Exit Codes
 
----
+| Code | Meaning |
+|------|---------|
+| `0` | All files formatted successfully (or no changes needed) |
+| `1` | Some files would be reformatted (when using `--check`) |
+| `123` | An internal error occurred (e.g., a file could not be parsed) |
 
 ## Additional Documentation
 
-For more details on related topics, check out these companion guides:
+- [System Architecture](ARCHITECTURE.md) — Understand how Black's components work together
+- [Contribution Guidelines](CONTRIBUTING.md) — Learn how to contribute to Black
+- [Development Setup](DEVELOPMENT.md) — Set up your development environment
+- [Testing Guide](TESTING.md) — Run and write tests for Black
+- [API Documentation](API.md) — Use the `blackd` HTTP API
 
-- [Architecture](ARCHITECTURE.md) — System components, data flow, and module relationships
-- [Contributing](CONTRIBUTING.md) — Development workflow, coding standards, and PR process
-- [Blackd HTTP API](API.md) — Conceptual guide to the HTTP formatting server
-- [Testing Guide](TESTING.md) — How to run and write tests
-- [Development Setup](DEVELOPMENT.md) — Environment setup and common tasks
+## License
+
+MIT

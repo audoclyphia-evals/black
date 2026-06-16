@@ -1,99 +1,85 @@
 # Contribution Guidelines
 
-Welcome to Black — we're thrilled you want to contribute! 🎉
-
 ![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)
 
-Black is the uncompromising Python code formatter. This guide will help you navigate the codebase, set up your development environment, run tests, and submit high-quality pull requests. Whether you're fixing a bug, adding a formatting feature, or improving test coverage, this document points you in the right direction.
-
-## Overview
-
-The Black codebase is organized around three main packages:
-
-- **`src/black/`** — The core formatting engine, including parsing, line generation, string transformation, bracket tracking, and configuration handling.
-- **`src/blackd/`** — An optional HTTP server (`blackd`) and client (`BlackDClient`) that exposes Black's formatting over HTTP.
-- **`src/blib2to3/`** — A forked lib2to3 parser infrastructure (including `pgen2/` for grammar, tokenization, and parsing) that powers Black's syntax analysis.
-
-Supporting directories include `scripts/` (release automation, schema generation, fuzzing, and documentation validation), `action/` (GitHub Actions integration), `tests/` (test suite and test case data), and `docs/` (Sphinx configuration).
-
-For a detailed breakdown of how these components interact, see [Architecture](ARCHITECTURE.md).
+Welcome to Black — the uncompromising Python code formatter. We're thrilled you're considering contributing! Whether you're fixing a bug, adding a feature, improving documentation, or just asking a question, your help makes Black better for everyone. This guide will walk you through everything you need to know to get started.
 
 ## Development
 
-### Setting Up Your Environment
+Setting up your development environment for Black is straightforward. You'll need Python 3.8 or later.
 
-1. **Clone the repository** and create a virtual environment:
+### Quick Start
+
+Clone the repository and install Black in editable mode with development dependencies:
 
 ```bash
 git clone https://github.com/psf/black.git
 cd black
 python -m venv venv
-source venv/bin/activate
-```
-
-2. **Install Black in editable mode** with development dependencies:
-
-```bash
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -e ".[dev]"
 ```
 
-3. **Verify your setup** by running a quick format check:
+### Available Scripts
 
-```bash
-python -m black --check src/
-```
-
-### Project Layout at a Glance
-
-| Directory | Purpose |
-|---|---|
-| `src/black/` | Core formatter logic (linegen, brackets, strings, trans, etc.) |
-| `src/blackd/` | HTTP server and client for remote formatting |
-| `src/blib2to3/` | Python parser and grammar infrastructure |
-| `tests/` | Test suite and test configuration |
-| `tests/data/cases/` | Formatting test case input/output files |
-| `scripts/` | Release, schema generation, fuzzing, and doc validation scripts |
-| `action/` | GitHub Actions entry point |
-| `profiling/` | Profiling utilities |
-
-### Key Source Modules
-
-The core formatter lives in `src/black/`. Here are the most important modules you'll likely interact with:
-
-- **`__init__.py`** — Main entry point and core formatting orchestration.
-- **`linegen.py`** — Generates reformatted `Line` objects from the syntax tree.
-- **`lines.py`** — `Line`, `LinesBlock`, `EmptyLineTracker`, and related data structures.
-- **`brackets.py`** — `BracketTracker` for tracking bracket depth and delimiter priorities.
-- **`trans.py`** — String transformers (merging, splitting, paren stripping).
-- **`strings.py`** — String manipulation utilities.
-- **`mode.py`** — `Mode`, `TargetVersion`, `Preview`, and `Feature` enumerations for configuration.
-- **`parsing.py`** — Source code parsing and AST safety validation.
-- **`comments.py`** — Comment parsing and `fmt:off`/`fmt:on`/`fmt:skip` directive handling.
-- **`ranges.py`** — Line-range formatting support.
-- **`numerics.py`** — Numeric literal formatting and normalization.
-- **`files.py`** — File discovery, root detection, and configuration parsing.
-- **`cache.py`** — File caching to skip unchanged files.
-- **`report.py`** — Formatting result reporting (`Report`, `Changed`, `NothingChanged`).
-
-### Scripts
-
-The `scripts/` directory contains several useful utilities:
+Black includes several utility scripts in the `scripts/` directory to help with development and release tasks:
 
 | Script | Purpose |
-|---|---|
-| `scripts/release.py` | Automates release versioning and changelog updates |
-| `scripts/release_tests.py` | Tests for the release versioning logic |
-| `scripts/generate_schema.py` | Generates the JSON configuration schema for Black |
-| `scripts/make_width_table.py` | Generates Unicode character width tables |
-| `scripts/fuzz.py` | Property-based fuzzing tests |
-| `scripts/diff_shades_gha_helper.py` | GitHub Actions helper for diff-shades analysis |
-| `scripts/migrate-black.py` | Rewrites git history applying Black to individual commits |
-| `scripts/check_version_in_basics_example.py` | Validates version references in documentation |
-| `scripts/check_pre_commit_rev_in_example.py` | Validates pre-commit configuration in documentation |
+|--------|---------|
+| `scripts/fuzz.py` | Property-based fuzzing tests for the formatter |
+| `scripts/release.py` | Automates changes needed during and after releases |
+| `scripts/release_tests.py` | Unit tests for the release versioning logic |
+| `scripts/generate_schema.py` | Generates JSON schema for Black's configuration options |
+| `scripts/make_width_table.py` | Generates Unicode width table for character width calculations |
+| `scripts/migrate-black.py` | Rewrites git history by applying Black to individual commits |
+| `scripts/diff_shades_gha_helper.py` | GitHub Actions helper for diff-shades PR analysis |
+| `scripts/check_pre_commit_rev_in_example.py` | Validates pre-commit rev consistency in documentation |
+| `scripts/check_version_in_basics_example.py` | Checks version consistency in "the_basics.md" documentation |
+
+### Code Organization
+
+The project is organized into three main source packages under `src/`:
+
+- **`black/`** — The core formatting engine, CLI, and configuration
+- **`blackd/`** — The HTTP daemon server for formatting code over HTTP
+- **`blib2to3/`** — The Python parser (a modified lib2to3) used to parse source code
+
+Key modules within `src/black/` include:
+
+- `__init__.py` — Main CLI entry point and core formatting logic
+- `mode.py` — Configuration data structures (`Mode`, `TargetVersion`, `Feature`, `Preview`)
+- `linegen.py` — Generates reformatted `Line` objects from the syntax tree
+- `lines.py` — Line manipulation utilities and data structures
+- `brackets.py` — Tracks bracket depth and delimiter priorities for line splitting
+- `comments.py` — Parses and normalizes comments and formatting directives
+- `nodes.py` — Utility functions for syntax tree node manipulation
+- `trans.py` — String transformers for splitting and merging string literals
+- `strings.py` — String manipulation utilities
+- `ranges.py` — Handles formatting of specific line ranges
+- `cache.py` — Caching of formatted files for performance
+- `parsing.py` — Parses source code into syntax trees and validates AST consistency
+- `concurrency.py` — Utilities for formatting multiple files concurrently
+- `handle_ipynb_magics.py` — Handles IPython magic commands in Jupyter notebooks
+- `numerics.py` — Formats numeric literals (hex, octal, scientific notation)
+- `output.py` — Styled terminal output and diff generation
+- `report.py` — Tracks formatting statistics and reporting
+- `files.py` — File system operations and pyproject.toml parsing
+- `debug.py` — Debug utilities for inspecting syntax trees
+- `rusty.py` — Rust-inspired `Result` types (`Ok`/`Err`)
+- `schema.py` — JSON schema access for configuration validation
+
+### Code Style and Linting
+
+Black is itself a code formatter, so we expect all contributions to be formatted with Black! The project also uses:
+
+- **Black** for code formatting (of course!)
+- **pytest** for testing
+
+There's no separate linting configuration — Black's formatting is the standard. Just run Black on your changes before committing.
 
 ## Testing
 
-Black has an extensive test suite. For a comprehensive guide on running tests, understanding test structure, and writing new tests, see [Testing Guide](TESTING.md).
+Testing is a critical part of contributing to Black. The project has an extensive test suite to ensure formatting correctness and stability.
 
 ### Running Tests
 
@@ -101,90 +87,127 @@ Black has an extensive test suite. For a comprehensive guide on running tests, u
 # Run the full test suite
 pytest
 
-# Run a specific test file
-pytest tests/test_format.py
+# Run tests with verbose output
+pytest -v
 
-# Run tests matching a pattern
-pytest -k "test_black"
+# Run a specific test file
+pytest tests/test_black.py
+
+# Run tests with coverage
+pytest --cov=src
 ```
 
 ### Test Structure
 
-Tests live in the `tests/` directory. The file `tests/conftest.py` provides pytest configuration and custom command-line options:
+Tests are located in the `tests/` directory and follow this structure:
 
-- `--print-full-tree` — Prints the full syntax tree for debugging.
-- `--print-tree-diff` — Prints diffs between syntax trees.
+- **`tests/conftest.py`** — Pytest configuration, custom command-line options (like `--print-full-tree` and `--print-tree-diff`)
+- **`tests/data/cases/`** — Test case files that demonstrate specific formatting scenarios. These are Python files that are formatted and compared against expected output.
 
-### Test Cases
+The test cases cover a wide range of Python features and edge cases, including:
 
-Formatting test cases are stored in `tests/data/cases/` as Python files. Each file typically contains both the input and expected output, separated by markers. The test cases cover a wide range of formatting scenarios:
-
-- **`fmt:skip` directive handling** — Files like `fmtskip.py`, `fmtskip_after_bracket_with_comment.py`, `fmtskip_class_header.py`, and others test that `fmt: skip` annotations correctly exclude code from formatting.
-- **Redundant parentheses removal** — Test cases verify that unnecessary parentheses are stripped from assignments, return type annotations, except clauses, and more.
-- **Docstring blank line handling** — Files like `pyi_docstring_blank_lines_no_preview.py` test blank line rules in `.pyi` stub files and standard Python files.
-- **Import line collapse** — `import_line_collapse.py` tests formatting of import statements.
-- **Numeric literal formatting** — `numeric_literals.py` and `numeric_literals_skip_underscores.py` test hex, scientific notation, and underscore handling.
-- **Comment handling** — Multiple `comments*.py` files cover inline comments, bracket comments, and `type: ignore` directives.
-- **Line range formatting** — `line_ranges_basic.py`, `line_ranges_fmt_off.py`, and others test selective formatting by line range.
-- **Pattern matching** — Several `pattern_matching_*.py` files test Python 3.10+ `match`/`case` syntax.
-- **Preview features** — Files prefixed with `preview_` test upcoming formatting behaviors.
+| Category | Example Files |
+|----------|---------------|
+| Comments | `comments.py`, `comments2.py`–`comments9.py`, `comments_in_blocks.py`, `comments_in_comprehensions.py` |
+| Formatting directives | `fmtonoff.py`–`fmtonoff6.py`, `fmtskip.py`–`fmtskip13.py` |
+| String formatting | `fstring.py`, `fstring_quotations.py`, `long_strings__type_annotations.py` |
+| Pattern matching | `pattern_matching_simple.py`, `pattern_matching_complex.py`, `pattern_matching_generic.py` |
+| PEP features | `pep_572.py`, `pep_604.py`, `pep_646.py`, `pep_654.py`, `pep_701.py` |
+| Line ranges | `line_ranges_basic.py`, `line_ranges_diff_edge_case.py`, `line_ranges_fmt_off.py` |
+| Docstrings | `docstring.py`, `docstring2.py`, `docstring_newline.py`, `module_docstring_1.py`–`module_docstring_4.py` |
+| Context managers | `context_managers_38.py`, `context_managers_39.py`, `context_managers_autodetect_38.py`–`context_managers_autodetect_311.py` |
+| Preview mode | `preview_comments7.py`, `preview_long_strings.py`, `preview_hug_parens_with_braces_and_square_brackets.py` |
 
 ### Writing New Tests
 
-When adding a new formatting feature or fixing a bug:
+When adding a new feature or fixing a bug:
 
-1. **Create a test case file** in `tests/data/cases/` with both input and expected output.
-2. **Register it** in the appropriate test module so it gets picked up by the test runner.
-3. **Run the test suite** to verify your change doesn't regress existing behavior.
+1. **Create a test case file** in `tests/data/cases/` with the input code you want to format
+2. The test framework will automatically format it and compare against expected output
+3. For formatting directive tests (like `# fmt: off`), see existing files like `fmtskip.py` for patterns
+4. For preview mode features, use the `preview_` prefix in your test file name
 
-Property-based fuzzing tests in `scripts/fuzz.py` can also help catch edge cases.
+### Testing Best Practices
+
+- Write tests that demonstrate the specific behavior you're adding or fixing
+- Include edge cases (empty input, extreme nesting, unusual spacing)
+- Test both the "before" and "after" formatting states
+- For bug fixes, add a regression test that would have failed before your fix
+- Use descriptive test file names that indicate what's being tested
 
 ## Contributing
 
-We'd love your help making Black better! Here's how to get started.
+We'd love your help! Here's how you can contribute to Black.
 
-### Workflow
+### Where to Start
 
-1. **Fork** the repository on GitHub.
+Not sure where to begin? Here are some ideas:
+
+- **Report bugs** — Open an issue on GitHub with a minimal reproduction case
+- **Improve documentation** — Fix typos, clarify explanations, add examples
+- **Add test cases** — Cover edge cases that aren't currently tested
+- **Fix known issues** — Check the issue tracker for open bugs
+- **Implement features** — Look for feature requests and discuss your approach first
+
+### Pull Request Workflow
+
+1. **Fork the repository** on GitHub
 2. **Create a feature branch** from `main`:
+   ```bash
+   git checkout -b my-feature-branch
+   ```
+3. **Make your changes** — follow the code style and add tests
+4. **Run tests** to make sure everything passes:
+   ```bash
+   pytest
+   ```
+5. **Format your code** with Black:
+   ```bash
+   black src/ tests/
+   ```
+6. **Commit your changes** with a clear, descriptive commit message
+7. **Push to your fork** and open a pull request against the `main` branch
 
-```bash
-git checkout -b your-feature-branch
-```
+### Commit Message Conventions
 
-3. **Make your changes** — keep commits focused and well-described.
-4. **Run the test suite** to make sure everything passes.
-5. **Submit a pull request** against `main`.
+We follow conventional commit style:
 
-### Pull Request Guidelines
+- `fix:` — Bug fixes
+- `feat:` — New features
+- `docs:` — Documentation changes
+- `test:` — Adding or modifying tests
+- `refactor:` — Code refactoring
+- `style:` — Formatting changes
+- `chore:` — Maintenance tasks
 
-- **One change per PR** — keep pull requests focused and reviewable.
-- **Include test cases** — every formatting change should come with a test case in `tests/data/cases/`.
-- **Follow existing code style** — the project obviously uses Black itself for formatting.
-- **Describe what changed and why** — include context in your PR description about the problem you're solving.
+Example: `fix: handle edge case in bracket matching with nested parentheses`
+
+### Code Review Process
+
+Once you open a pull request:
+
+1. **Automated checks** will run (tests, formatting validation)
+2. **Maintainers will review** your code within a few days
+3. **Address feedback** by pushing additional commits to your branch
+4. **Once approved**, a maintainer will merge your PR
 
 ### Reporting Issues
 
-Issues can be reported on the GitHub issue tracker. When reporting:
+When reporting a bug, please include:
 
-- Include the version of Black you're using (`black --version`).
-- Provide a minimal code example that reproduces the issue.
-- Show the expected vs. actual formatting output.
+- A minimal, reproducible example of the code that causes the issue
+- The expected formatting output
+- The actual formatting output (or error message)
+- Your Black version (`black --version`)
+- Your Python version
+- Any relevant configuration (pyproject.toml, etc.)
 
-### Code Areas Needing Contribution
+### Need Help?
 
-Based on the codebase, here are areas where contributions are especially welcome:
+- **Chat on Discord** — [Join our Discord server](https://discord.gg/RtVdv86PrH) for real-time help
+- **Open a Discussion** — Use GitHub Discussions for questions and ideas
+- **Read the docs** — Visit [black.readthedocs.io](https://black.readthedocs.io/en/stable/) for comprehensive documentation
 
-- **Test coverage** — The `tests/data/cases/` directory is extensive but there are always edge cases to cover, particularly around line-range formatting, preview features, and complex bracket expressions.
-- **Preview features** — The `Preview` enumeration in `src/black/mode.py` defines individual preview-style features. These are a great place to contribute new formatting behaviors.
-- **Documentation** — Improving docstrings, adding examples, and enhancing the contributor experience.
+### License
 
-### Additional Documentation
-
-For deeper dives into specific areas, check out these companion guides:
-
-- [Architecture](ARCHITECTURE.md) — System components, relationships, and data flow.
-- [Blackd HTTP API Conceptual Guide](API.md) — How to use the blackd HTTP API.
-- [Command-Line Interface Reference](CLI.md) — Detailed CLI options and usage patterns.
-- [Testing Guide](TESTING.md) — Running tests, test structure, and writing new tests.
-- [Development Setup and Workflow](DEVELOPMENT.md) — Environment setup, tools, and workflow details.
+Black is licensed under the MIT License. By contributing, you agree that your contributions will be licensed under the same license.

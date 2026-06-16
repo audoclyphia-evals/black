@@ -1,66 +1,40 @@
-# Black: The Uncompromising Python Code Formatter
+# Black: The uncompromising Python code formatter
 
-Black is a deterministic Python code formatter that reformats entire files in place. It is opinionated and requires no configuration to use, making Python code more consistent and easier to read across teams and projects.
+## Project Description
+
+Black is a code formatter for Python. With a focus on consistency and minimal configuration, it automatically reformats Python source code to comply with the official PEP 8 style guide and Black's own opinionated style. It is designed to eliminate debates about formatting and enforce a single, deterministic output.
 
 ## System Architecture
 
-Black is a standalone tool designed to operate independently within the Python ecosystem. It integrates with standard development workflows and toolchains rather than relying on external microservices.
+Black is a standalone command‑line tool and library with no external dependencies beyond Python. The following diagram illustrates its high‑level architecture:
 
 ```mermaid
 graph TD
-    A[Python Source Code] -->|Input| B[Black Formatter]
-    B -->|Parse| C[AST Parser]
-    B -->|Format| D[Code Transformation Engine]
-    D -->|Output| E[Formatted Python Code]
-    
-    B --> F[Configuration Layer]
-    F -->|Reads| G[pyproject.toml]
-    F -->|Reads| H[CLI Arguments]
-    
-    B --> I[Integration Points]
-    I --> J[Pre-commit Hooks]
-    I --> K[IDE Plugins]
-    I --> L[CI/CD Pipelines]
-    I --> M[Other Formatters / Linters]
-    
-    style B fill:#2b5797,color:#fff
-    style D fill:#3e8e41,color:#fff
+    A[Python Source File] -->|Input| B[Black CLI / API]
+    B --> C[Parser: LibCST / AST]
+    C --> D[Formatter Pipeline]
+    D --> E[Line Splitting & Indentation]
+    D --> F[Empty Line Handling]
+    D --> G[String Normalization]
+    E --> H[Formatted Code]
+    F --> H
+    G --> H
+    H -->|Output| I[Formatted Python File]
 ```
+
+The tool can be invoked via the command line or used programmatically through its Python API. All processing is performed locally—no network calls or persistent state.
 
 ## Services / Components
 
-As a standalone tool, Black consists of several internal components rather than distributed services:
-
-| Component | Description |
-|-----------|-------------|
-| **CLI Interface** | Command-line interface for invoking Black with file paths, options, and configuration arguments |
-| **AST Parser** | Parses Python source code into an Abstract Syntax Tree using Python's built-in parser |
-| **Code Transformation Engine** | The core formatting logic that applies Black's opinionated style rules to the AST |
-| **Output Generator** | Converts the transformed AST back into formatted Python source code |
-| **Configuration Layer** | Handles reading configuration from `pyproject.toml`, CLI flags, and default settings |
-| **Diff Engine** | Provides diff output and check mode to compare original vs. formatted code |
+- **CLI (`black` command)** – The primary entry point for users. Parses command‑line arguments, discovers files, and invokes the formatting engine.
+- **Core Formatter (library)** – Contains the parsing logic (using `libcst` or the built‑in `ast` module) and a pipeline of transformations:
+  - *Line Splitting & Indentation* – Ensures code fits within the configured line length.
+  - *Empty Line Handling* – Adds or removes blank lines according to PEP 8 and Black’s rules.
+  - *String Normalization* – Standardizes quotes, line endings, and whitespace.
+- **Config** – Reads configuration from `pyproject.toml`, `setup.cfg`, or inline comments. Controls settings like line length, target versions, and whether to use preview style.
 
 ## Communication Patterns
 
-Black operates as a single-process command-line tool with the following interaction patterns:
-
-### External Integrations
-
-| Integration Type | Pattern | Description |
-|------------------|---------|-------------|
-| **File I/O** | Read/Write | Reads Python source files and writes formatted output in place |
-| **Pre-commit Framework** | Hook-based | Executes as a pre-commit hook via `.pre-commit-config.yaml` |
-| **IDE Integration** | Process invocation | Editors (VS Code, PyCharm, etc.) invoke Black as a subprocess |
-| **CI/CD Systems** | CLI execution | GitHub Actions, GitLab CI, and other pipelines run Black in check mode |
-| **Linter Ecosystem** | File sharing | Works alongside tools like `isort`, `flake8`, and `mypy` by formatting the same source files |
-
-### Internal Data Flow
-
-1. **Input Processing**: Accepts file paths, directories, or stdin input
-2. **Parsing**: Converts source code to AST representation
-3. **Formatting**: Applies deterministic formatting rules
-4. **Output**: Returns formatted code to stdout, files, or diff output
-
----
-
-*Black's philosophy: "Any color you want, as long as it's black." — It provides one true style, eliminating bikeshedding about Python code style.*
+- **Local Execution** – Black runs entirely on the user’s machine. There are no network services, databases, or inter‑repository dependencies.
+- **CLI / API** – The primary communication is via the standard input/output/error streams (CLI) or direct function calls (API). Users provide Python source files, and Black returns the formatted version.
+- **Idempotent & Stateless** – Each invocation is independent; Black does not maintain any shared state across runs. The only persistent effect is the modification of source files on disk (when not in `--check` or `--diff` mode).
