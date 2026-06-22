@@ -4,80 +4,121 @@ config:
 ---
 classDiagram
     direction TB
-    namespace config {
-        class Mode {
-            Stores configuration settings
+    
+    namespace Core {
+        class Parser {
+            <<Service>>
+            +parse(source_code: str) : AST
+            +generate_tokens() : List[Token]
         }
-        class Feature {
-            <<Enumeration>>
-            Python language features
-        }
-        class TargetVersion {
-            <<Enumeration>>
-            Python versions
-        }
-        class WriteBack {
-            <<Enumeration>>
-            Output modes
+        
+        class AST {
+            <<Interface>>
+            +root: Node
         }
     }
-    namespace linegen {
-        class LineGenerator {
-            Generates reformatted lines
-        }
-        class Line {
-            Holds leaves and comments
-        }
-        class CannotSplit {
-            Exception for split failures
-        }
-        class BracketTracker {
-            Tracks bracket depth
-        }
-        class EmptyLineTracker {
-            Calculates empty lines
-        }
-    }
-    namespace trans {
-        class StringTransformer {
+    
+    namespace AST {
+        class Node {
             <<Abstract>>
-            Base class for transformers
+            +value: str
+            +children: List[Node]
         }
+        
+        class InteriorNode {
+            +children: List[Node]
+        }
+        
+        class LeafNode {
+            +value: str
+            +type: TokenType
+        }
+    }
+    
+    namespace LineGeneration {
+        class LineGenerator {
+            <<Service>>
+            +generate_lines(ast: AST) : List[Line]
+            +transform_line(line: Line) : Line
+        }
+    }
+    
+    namespace Formatting {
+        class Line {
+            +depth: int
+            +content: str
+            +is_comment: bool
+            +is_def: bool
+            +bracket_tracker: BracketTracker
+            +comments: List[str]
+        }
+        
+        class EmptyLineTracker {
+            <<Service>>
+            +maybe_empty_lines(current_line: Line, previous_line: Line) : List[Line]
+        }
+        
+        class BracketTracker {
+            +bracket_depth: int
+            +bracket_tally: Dict[str, int]
+        }
+        
+        class TransformLine {
+            <<Function>>
+            +transform_line(line: Line, mode: Mode) : Line
+        }
+        
+        class DelimiterSplit {
+            <<Function>>
+            +delimiter_split(line: Line, delimiter: str) : List[Line]
+        }
+    }
+    
+    namespace Transformers {
+        class StringTransformer {
+            <<Interface>>
+            +transform(line: Line) : Line
+            +do_match(line: Line) : bool
+        }
+        
+        class StringSplitter {
+            +transform(line: Line) : Line
+            +do_match(line: Line) : bool
+        }
+        
         class StringMerger {
-            Merges adjacent strings
-        }
-        class CannotTransform {
-            Base error class
+            +transform(line: Line) : Line
+            +do_match(line: Line) : bool
         }
     }
-    namespace lines {
-        class RHSResult {
-            Stores split results
-        }
-        class LinesBlock {
-            Holds formatted lines
-        }
-        class ProtoComment {
-            Comment representation
-        }
-    }
-    namespace visitors {
-        class Visitor {
-            AST traversal base
-        }
-        class DebugVisitor {
-            Debug AST printer
-        }
-    }
-    CannotSplit --|> CannotTransform
-    StringMerger --|> StringTransformer
-    DebugVisitor --|> Visitor
-    LineGenerator --> Line
-    LineGenerator --> BracketTracker
-    LineGenerator --> EmptyLineTracker
-    StringTransformer --> CannotTransform
-    Mode --> Feature
-    Mode --> TargetVersion
-    Line --> ProtoComment
-    LinesBlock --> Line
-    RHSResult --> Line
+    
+    %% Relationships
+    Parser --> AST : produces
+    AST --> Node : contains root
+    Node <|-- InteriorNode : inherits
+    Node <|-- LeafNode : inherits
+    
+    LineGenerator --> Parser : uses
+    LineGenerator --> Line : generates
+    LineGenerator --> EmptyLineTracker : uses
+    
+    TransformLine --> LineGenerator : called_by
+    TransformLine --> StringTransformer : uses
+    TransformLine --> DelimiterSplit : calls
+    
+    StringTransformer <|-- StringSplitter : inherits
+    StringTransformer <|-- StringMerger : inherits
+    
+    Line --> BracketTracker : has
+    Line --> Node : contains
+    
+    %% Styling for clarity
+    classDef service fill:#f9f,stroke:#333,stroke-width:2px
+    classDef data fill:#ffd,stroke:#333,stroke-width:2px
+    classDef function fill:#dfd,stroke:#333,stroke-width:2px
+    classDef interface fill:#dff,stroke:#333,stroke-width:2px
+    
+    class Parser,LineGenerator,EmptyLineTracker service
+    class Line,BracketTracker,AST data
+    class TransformLine,DelimiterSplit function
+    class Node,StringTransformer interface

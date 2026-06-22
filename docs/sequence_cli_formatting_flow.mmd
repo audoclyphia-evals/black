@@ -1,0 +1,30 @@
+sequenceDiagram
+    participant User as "User"
+    participant CLI as "black CLI (entry)"
+    participant FileDiscovery as "File Discovery (files.py)"
+    participant Parser as "Parser (parsing.py)"
+    participant Formatter as "Formatter (core)"
+    participant Output as "Output (output.py)"
+    participant Cache as "Cache (cache.py)"
+    
+    Note over CLI, Cache: Cluster_0: Core CLI Formatting Workflow
+    
+    autonumber
+    User->>CLI: Run black command with arguments
+    CLI->>CLI: Parse command-line arguments
+    CLI->>FileDiscovery: find_files(src, options)
+    FileDiscovery-->>CLI: list of Python files
+    CLI->>Cache: check_cache(files)
+    Cache-->>CLI: cached results (if available)
+    
+    loop For each file
+        CLI->>Parser: parse_file(file_contents)
+        Parser-->>CLI: parsed AST
+        CLI->>Formatter: format_code(ast, mode)
+        Note over Formatter: Uses linegen.py, lines.py, etc.
+        Formatter-->>CLI: formatted code
+        CLI->>Output: write_output(file, formatted_code)
+        Output-->>CLI: success/failure
+    end
+    
+    CLI-->>User: Output results (stdout or file)

@@ -1,0 +1,79 @@
+---
+config:
+  layout: elk
+---
+classDiagram
+    direction TB
+
+    namespace grammar_tables {
+        class Grammar {
+            +symbol2number: dict
+            +number2symbol: dict
+            +states: list
+            +dfas: dict
+            +labels: list
+        }
+
+        class PgenGrammar {
+        }
+    }
+
+    namespace nfa_dfa {
+        class NFAState {
+        }
+
+        class DFAState {
+        }
+
+        class DFAGraph {
+        }
+    }
+
+    namespace token_handling {
+        class Token {
+            +name: str
+            +value: int
+        }
+
+        class Tokenizer {
+            +tokenize()
+        }
+    }
+
+    namespace parsing {
+        class Parser {
+            +grammar: Grammar
+            +parse()
+        }
+
+        class Driver {
+            +grammar: Grammar
+            +parse_tokens()
+        }
+    }
+
+    namespace syntax_tree {
+        class Node {
+            +type: int
+            +children: list
+        }
+
+        class Leaf {
+            +type: int
+            +value: str
+        }
+    }
+
+    %% Relationships
+    PgenGrammar --|> Grammar : inherits
+    Grammar "1" --> "*" DFAState : contains
+    Grammar "1" --> "*" Token : references
+    NFAState ..> DFAGraph : converts to
+    DFAGraph ..> DFAState : produces
+    Parser --> Grammar : uses
+    Parser --> Tokenizer : uses
+    Parser --> Node : produces
+    Driver --> Parser : creates
+    Driver --> Grammar : loads
+    Node "1" --> "*" Node : contains
+    Node "1" --> "*" Leaf : contains

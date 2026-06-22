@@ -1,0 +1,62 @@
+flowchart TB
+    %% External users and entry points
+    user([Developers / CI Systems]) 
+    user -->|Python source code| cli
+    user -->|HTTP requests| http_server
+    
+    subgraph Entry_Points [Entry Points]
+        cli[CLI<br>black<br>%% source: src/black/__main__.py]
+        http_server[HTTP Server<br>blackd<br>%% source: src/blackd/__main__.py]
+        github_action[GitHub Action<br>%% source: action/main.py]
+    end
+    
+    subgraph Core_Formatter [Core Formatting Engine]
+        formatting_engine[Formatting Engine<br>%% source: src/black/*]
+        parser[Parser Library<br>blib2to3<br>%% source: src/blib2to3/*]
+        cache[Cache System<br>%% source: src/black/cache.py]
+    end
+    
+    subgraph Supporting_Modules [Supporting Modules]
+        mode[Mode Configuration<br>%% source: src/black/mode.py]
+        range_support[Line Range Support<br>%% source: src/black/ranges.py]
+    end
+    
+    subgraph Testing [Testing Infrastructure]
+        test_suite[Test Suite<br>%% source: tests/*]
+        test_data[Test Data Cases<br>%% source: tests/data/cases/*]
+    end
+    
+    subgraph Build_Distribution [Build & Distribution]
+        pyproject[pyproject.toml<br>%% source: root directory]
+        docker[Docker Image<br>%% source: Dockerfile]
+    end
+    
+    %% Core flow connections
+    cli --> formatting_engine
+    http_server --> formatting_engine
+    github_action --> cli
+    
+    formatting_engine --> parser
+    parser --> formatting_engine
+    
+    formatting_engine --> cache
+    formatting_engine --> mode
+    formatting_engine --> range_support
+    
+    %% Testing connections
+    formatting_engine -.->|tested by| test_suite
+    test_suite -.->|uses| test_data
+    
+    %% Distribution connections
+    pyproject --> cli
+    pyproject --> http_server
+    pyproject --> docker
+    
+    %% Output
+    formatting_engine --> formatted_code([Formatted Python Code])
+    cli --> formatted_code
+    http_server --> formatted_code
+    
+    %% Style notes
+    style user fill:#f9f,stroke:#333
+    style formatted_code fill:#9f9,stroke:#333

@@ -6,10 +6,9 @@ info:
 paths:
   release.get_git_tags:
     patch:
-      summary: Test next calendar version logic from git tags
-      description: Tests the logic for determining the next calendar version based
-        on git tags
-      operationId: getGitTagsVersionTest
+      summary: Test get_next_version with mock git tags.
+      description: Endpoint to calculate next version based on provided git tags.
+      operationId: releaseGetGitTags
       tags:
       - Release
       responses:
@@ -34,7 +33,7 @@ paths:
                   type: array
                   items:
                     type: string
-                  description: List of git tag versions to test
+                  description: List of git tags for version calculation
             example:
               gitTags:
               - 1.1.0
@@ -43,10 +42,11 @@ paths:
               - 2.2.0
   /path/:
     get:
-      summary: API endpoint with union type query parameter
-      description: Endpoint with optional string query parameter q (nullable)
-      operationId: apiEndpointWithUnionTypeQueryParameter
-      tags: []
+      summary: Async endpoint with optional query parameter
+      description: An asynchronous endpoint that accepts an optional query parameter.
+      operationId: foo
+      tags:
+      - General
       responses:
         '200':
           description: Success
@@ -65,4 +65,6 @@ paths:
           nullable: true
         description: Some long description
 tags:
+- name: General
 - name: Release
+- name: Testing

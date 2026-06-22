@@ -1,0 +1,30 @@
+sequenceDiagram
+    autonumber
+    participant Client as HTTP Client
+    participant BlackdServer as blackd_server
+    participant Middleware as CORS_Middleware
+    participant ModeParser as Mode_Parser
+    participant BlackCore as Black_Core
+    
+    %% Cluster_26: blackd HTTP server module - aiohttp-based web service
+    
+    Client->>BlackdServer: POST /format (code, headers)
+    activate BlackdServer
+    
+    BlackdServer->>Middleware: apply_cors(request)
+    activate Middleware
+    Middleware-->>BlackdServer: processed request
+    deactivate Middleware
+    
+    BlackdServer->>ModeParser: parse_mode_from_headers(headers)
+    activate ModeParser
+    ModeParser-->>BlackdServer: Mode object
+    deactivate ModeParser
+    
+    BlackdServer->>BlackCore: format_str(source, mode=mode)
+    activate BlackCore
+    BlackCore-->>BlackdServer: formatted_code
+    deactivate BlackCore
+    
+    BlackdServer-->>Client: 200 OK (formatted_code)
+    deactivate BlackdServer
