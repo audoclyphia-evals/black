@@ -1,0 +1,29 @@
+---
+config:
+  layout: elk
+---
+classDiagram
+    direction TB
+    %% Context lacks class definitions with methods/attributes
+    %% Only file names available from repository structure
+    
+    class black_module {
+        <<Module>>
+        %% src/black/__init__.py
+        %% Main entry point for black formatter
+    }
+    
+    class linegen_module {
+        <<Module>>
+        %% src/black/linegen.py
+        %% Line generation functionality
+    }
+    
+    class lines_module {
+        <<Module>>
+        %% src/black/lines.py
+        %% Line handling functionality
+    }
+    
+    black_module ..> linegen_module : uses
+    black_module ..> lines_module : uses

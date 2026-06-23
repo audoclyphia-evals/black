@@ -1,0 +1,46 @@
+---
+config:
+  layout: elk
+---
+classDiagram
+    class Grammar {
+        +module: String
+        +symbol2number: Dict
+        +number2symbol: Dict
+        +dfas: List
+        +symbols: Dict
+    }
+
+    class Parser {
+        +grammar: Grammar
+        +parser: Parser
+        +tokenizer: TokenProxy
+        +convert: Node
+    }
+
+    class TokenProxy {
+        +tokens: Iterator
+        +previous_token: Token
+        +token: Token
+    }
+
+    class Node {
+        +type: int
+        +children: List
+        +prefix: String
+        +lineno: int
+        +col_offset: int
+    }
+
+    class Driver {
+        +grammar: Grammar
+        +parser: Parser
+        +convert: Node
+    }
+
+    Grammar --> Parser : uses
+    TokenProxy --> Parser : provides tokens to
+    Node --> Parser : created by
+    Grammar --> Driver : used by
+    Parser --> Driver : used by
+    Node --> Node : contains children

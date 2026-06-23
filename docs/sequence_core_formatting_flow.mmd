@@ -1,0 +1,15 @@
+sequenceDiagram
+    participant User as "User"
+    participant Black as "Black Formatter"
+    participant blib2to3 as "blib2to3 Parser"
+    participant LineGen as "Line Generator"
+    participant Nodes as "Syntax Nodes"
+
+    User->>Black: invoke formatting
+    Black->>blib2to3: parse code
+    blib2to3-->>Black: return CST
+    Black->>Nodes: transform tree
+    Nodes-->>Black: return tree
+    Black->>LineGen: generate lines
+    LineGen-->>Black: return output lines
+    Black-->>User: return formatted code

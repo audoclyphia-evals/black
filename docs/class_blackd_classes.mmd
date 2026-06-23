@@ -1,0 +1,20 @@
+---
+config:
+  layout: elk
+---
+classDiagram
+    direction TB
+    namespace blackd {
+        class BlackdInit {
+        }
+        class BlackdMain {
+        }
+        class BlackdClient {
+        }
+        class BlackdMiddlewares {
+        }
+    }
+    BlackdInit ..> BlackdMain : runs
+    BlackdInit ..> BlackdClient : uses
+    BlackdInit ..> BlackdMiddlewares : uses
+    BlackdMiddlewares ..> BlackdClient : middleware for
