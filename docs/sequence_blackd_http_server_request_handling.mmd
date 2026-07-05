@@ -1,0 +1,24 @@
+%% Title: Blackd HTTP server request handling
+%% Trace: HTTP request flow from client to blackd server
+sequenceDiagram
+    %% source: Context #1 (entry points include src/blackd/client.py)
+    participant Client as "BlackDClient"
+    %% source: Context #1 (entry points include src/blackd/__init__.py)
+    participant Server as "blackd Server"
+    %% source: Context #2 (cluster description: CORS middleware for aiohttp applications)
+    participant Middleware as "CORS Middleware"
+    %% source: Context #1 (entry points include src/black/__init__.py for core formatter)
+    participant Formatter as "Black Formatter"
+
+    autonumber
+    %% Overall request-handling flow
+    activate Server
+    Client->>Server: POST request with code
+    %% source: Context #2 (CORS middleware cluster)
+    Server->>Middleware: check CORS
+    Middleware-->>Server: add CORS headers
+    %% source: Context #1 (blackd uses black for formatting)
+    Server->>Formatter: format code
+    Formatter-->>Server: formatted code
+    Server-->>Client: HTTP response with formatted code
+    deactivate Server

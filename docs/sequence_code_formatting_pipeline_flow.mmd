@@ -1,0 +1,45 @@
+sequenceDiagram
+    participant CLI as "CLI Entry Point (src/black/__init__.py)"
+    participant Formatter as "format_str/format_file_contents"
+    participant Parser as "blib2to3 Parser (blib2to3/pgen2/driver.py)"
+    participant LineGenerator as "LineGenerator (black/linegen.py)"
+    participant BracketTracker as "BracketTracker (black/brackets.py)"
+    participant CommentHandler as "normalize_invisible_parens (black/comments.py)"
+    participant Cache as "Cache (black/cache.py)"
+    participant LineRanges as "LineRanges (black/ranges.py)"
+    
+    CLI->>Formatter: format_str(source, mode) or format_file_contents(source, mode)
+    Formatter->>Cache: get_cached_source(source, filename)
+    alt Cache Hit
+        Cache-->>Formatter: cached formatted source
+    else Cache Miss
+        Formatter->>Parser: lib2to3_parse(source)
+        Parser-->>Formatter: AST (CST)
+        
+        loop For each line range
+            Formatter->>LineRanges: adjust_line_range(source, range)
+            LineRanges-->>Formatter: adjusted source
+        end
+        
+        Formatter->>LineGenerator: generate_lines(ast, mode)
+        activate LineGenerator
+        
+        loop For each line in AST
+            LineGenerator->>BracketTracker: mark_bracket_in_line()
+            activate BracketTracker
+            BracketTracker-->>LineGenerator: bracket depth info
+            deactivate BracketTracker
+            
+            LineGenerator->>CommentHandler: normalize_invisible_parens()
+            activate CommentHandler
+            CommentHandler-->>LineGenerator: normalized node
+            deactivate CommentHandler
+        end
+        
+        deactivate LineGenerator
+        LineGenerator-->>Formatter: formatted lines
+        
+        Formatter->>Cache: save_to_cache(source, formatted_source)
+    end
+    
+    Formatter-->>CLI: formatted source

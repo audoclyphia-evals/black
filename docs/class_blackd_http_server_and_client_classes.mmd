@@ -1,0 +1,31 @@
+---
+config:
+  layout: elk
+---
+classDiagram
+    direction TB
+
+    %% Namespace for blackd HTTP server components
+    namespace blackd {
+        class BlackDClient {
+            %% source: Context #1 file path src/blackd/client.py
+        }
+        class CORSMiddleware {
+            %% source: Context #2 CORS community cluster summary
+        }
+        class BlackDServer {
+            %% source: Context #1 file path src/blackd/__init__.py
+        }
+    }
+
+    %% Namespace for core formatting engine
+    namespace black {
+        class BlackFormatter {
+            %% source: Context #1 file path src/black/__init__.py
+        }
+    }
+
+    %% Relationships
+    BlackDClient ..> BlackDServer : "sends HTTP requests"
+    BlackDServer o-- CORSMiddleware : "applies CORS"
+    BlackDServer ..> BlackFormatter : "depends on for code formatting"

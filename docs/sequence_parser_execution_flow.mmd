@@ -1,0 +1,89 @@
+sequenceDiagram
+    %% Parser Execution Flow - Black Code Formatter
+    %% Based on repository context for src/blib2to3/pgen2 (parsing engine)
+    %% Limited to core participants from context, avoiding speculative details
+    
+    autonumber
+    %% Source: src/blib2to3/pgen2/ directory and file list (Context #1, #3)
+    
+    participant U as "User/Caller"
+    participant D as "Driver (blib2to3/pgen2/driver)"
+    participant T as "Tokenizer (blib2to3/pgen2/tokenize)"
+    participant P as "Parser (blib2to3/pgen2/parse)"
+    participant G as "Grammar (blib2to3/pgen2/grammar)"
+    participant AST as "AST Nodes (blib2to3/pytree)"
+    
+    %% Box for pgen2 components (Context #3: blib2to3/pgen2 module)
+    box "Parser Generation Engine (pgen2)"
+        participant D
+        participant T
+        participant P
+        participant G
+    end
+    box "Abstract Syntax Tree"
+        participant AST
+    end
+    
+    %% Parse source code entry point
+    %% Likely invoked from src/black/parsing.py or driver.py
+    U->>+D: parseSource(source, mode)
+    %% Driver initiates parsing flow
+    
+    %% Grammar loading (Context #1: pgen2/driver.py, grammar.py)
+    D->>+G: loadGrammar(pythonVersion)
+    %% Load appropriate grammar file for target Python version
+    %% Context suggests grammar handling (Cluster_77, Context #3: pgen2/grammar.py)
+    G-->>-D: grammarRules
+    %% Return grammar rules for parsing
+    
+    %% Tokenization phase (Context #1: pgen2/tokenize.py)
+    %% Context #2: Cluster_71 = lexer/tokenizer
+    D->>+T: tokenize(source, mode)
+    %% Split source into tokens
+    loop tokenization loop
+        T-->>D: token
+    end
+    T-->>-D: tokenSequence
+    %% Return complete token stream
+    
+    %% Parsing phase (Context #1: pgen2/parse.py)
+    %% Context #2: Cluster_148, Cluster_68 = parser components
+    D->>+P: parseTokens(tokenSequence, grammarRules)
+    
+    %% Branch: Pattern matching (Python 3.10+)
+    %% Context #1: pattern matching tests (e.g., pattern_matching_simple.py)
+    %% Also mentioned in scope for pattern matching handling
+    alt pattern matching (Python 3.10+)
+        P->>AST: handlePatternMatching(tokens)
+        note over P, AST: Pattern matching syntax parsing (Python 3.10+)
+        AST-->>P: matchASTNode
+    else standard parsing
+        P->>AST: constructAST(tokens, grammar)
+    end
+    
+    %% Branch: Version-specific parsing
+    %% Context #1: Tests for Python versions (Python 3.10, 3.11, 3.12)
+    %% Context #2: Clusters 125, 144, 178 refer to Python version handling
+    %% Context #1: Context manager tests (context_managers_38.py, etc.)
+    alt Python version handling
+        %% Version-specific grammar application
+        P->>G: getGrammarForVersion(version)
+        G-->>P: versionGrammar
+        P->>AST: applyVersionGrammar(versionGrammar)
+    end
+    
+    %% Valid syntax path
+    alt valid syntax
+        AST-->>P: syntaxTree
+        P-->>-D: parsedAST
+        D-->>-U: astTree
+    else invalid syntax
+        %% Context #1: Error handling (Cluster_161)
+        P-->>D: SyntaxError(error)
+        D-->>U: errorDetails
+    end
+    
+    %% Notes for clarity
+    note over G: Grammar files loaded (Context #3: pgen2/grammar.py)
+    note over AST: Builds PyTree nodes (Context #3: blib2to3/pytree.py)
+    note over P: Handles pattern matching and version differences

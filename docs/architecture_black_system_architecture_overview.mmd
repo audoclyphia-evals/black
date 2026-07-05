@@ -1,0 +1,45 @@
+flowchart TB
+    %% source: Context #1 repository overview (entry points)
+    user([User/Developer])
+    
+    %% source: Context #1 repository overview (entry points: src/black/__init__.py, src/black/__main__.py)
+    cli_entry[CLI Entry<br>src/black/__init__.py]
+    
+    %% source: Context #1 repository overview (entry points: src/blackd/__init__.py, src/blackd/__main__.py)
+    http_entry[HTTP Daemon Entry<br>src/blackd/__init__.py]
+    
+    %% source: Context #1 repository overview (src/black package files)
+    %% Context #2 clusters: formatter functions, AST manipulation, etc.
+    formatter[Black Formatter Engine<br>src/black]
+    
+    %% source: Context #1 repository overview (src/blib2to3 package)
+    %% Context #3 module hierarchy (blib2to3 and pgen2)
+    parser[Parser Infrastructure<br>src/blib2to3]
+    
+    %% source: Context #1 repository overview (src/black/cache.py)
+    cache[(File Cache<br>src/black/cache.py)]
+    
+    %% source: Context #1 repository overview (src/black/mode.py, src/black/const.py)
+    %% Context #2 clusters: configuration utilities
+    config[Configuration Manager<br>src/black/mode.py<br>src/black/const.py]
+    
+    %% Relationships
+    user -->|CLI commands| cli_entry
+    user -->|HTTP requests| http_entry
+    cli_entry --> formatter
+    http_entry --> formatter
+    formatter -->|Parses Python code| parser
+    formatter -->|Stores/formats results| cache
+    formatter -->|Reads formatting options| config
+    
+    subgraph Entry_Tier [Entry Points]
+        cli_entry
+        http_entry
+    end
+    
+    subgraph Core_Tier [Core System]
+        formatter
+        parser
+        cache
+        config
+    end

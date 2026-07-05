@@ -6,63 +6,22 @@ info:
 paths:
   release.get_git_tags:
     patch:
-      summary: Test next calendar version logic from git tags
-      description: Tests the logic for determining the next calendar version based
-        on git tags
-      operationId: getGitTagsVersionTest
-      tags:
-      - Release
-      responses:
-        '200':
-          description: Success
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal server error
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-              - gitTags
-              properties:
-                gitTags:
-                  type: array
-                  items:
-                    type: string
-                  description: List of git tag versions to test
-            example:
-              gitTags:
-              - 1.1.0
-              - 69.1.0
-              - 69.1.1
-              - 2.2.0
-  /path/:
-    get:
-      summary: API endpoint with union type query parameter
-      description: Endpoint with optional string query parameter q (nullable)
-      operationId: apiEndpointWithUnionTypeQueryParameter
+      summary: Tests the logic for determining the next calendar version based on
+        git tags.
+      description: Documentation generation skipped due to LLM timeout (120s limit
+        exceeded)
+      operationId: ''
       tags: []
       responses:
         '200':
           description: Success
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal server error
-      parameters:
-      - name: q
-        in: query
-        required: false
-        schema:
-          type: string
-          nullable: true
-        description: Some long description
-tags:
-- name: Release
+  /path/:
+    get:
+      summary: API endpoint with union type query parameter
+      description: Documentation generation skipped due to LLM timeout (120s limit
+        exceeded)
+      operationId: ''
+      tags: []
+      responses:
+        '200':
+          description: Success
