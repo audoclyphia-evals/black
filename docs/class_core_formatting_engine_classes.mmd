@@ -3,81 +3,109 @@ config:
   layout: elk
 ---
 classDiagram
-    direction TB
-    namespace config {
-        class Mode {
-            Stores configuration settings
-        }
-        class Feature {
-            <<Enumeration>>
-            Python language features
-        }
-        class TargetVersion {
-            <<Enumeration>>
-            Python versions
-        }
-        class WriteBack {
-            <<Enumeration>>
-            Output modes
-        }
-    }
-    namespace linegen {
+    %% Core formatting engine classes - Source: context #1 (file list) and context #2 (cluster summaries)
+    %% Based on repository structure and cluster descriptions
+
+    namespace formatting_pipeline {
+        %% Main formatting pipeline classes
         class LineGenerator {
-            Generates reformatted lines
+            %% Source: context #1 - linegen.py
+            %% Context #2: "line generation and manipulation (Cluster_5)"
+            +generate_lines()$ : List
         }
+
         class Line {
-            Holds leaves and comments
+            %% Source: context #1 - lines.py
+            %% Context #2: "line generation and manipulation (Cluster_5)"
+            +content: str
+            +is_comment: bool
+            +indent_level: int
         }
-        class CannotSplit {
-            Exception for split failures
-        }
+
         class BracketTracker {
-            Tracks bracket depth
+            %% Source: context #1 - brackets.py
+            %% Context #2: "bracket tracking and comment parsing"
+            +track_bracket_depth()
+            +is_formatting_off()$ : bool
         }
-        class EmptyLineTracker {
-            Calculates empty lines
+
+        class Comment {
+            %% Source: context #1 - comments.py
+            %% Context #2: "bracket tracking and comment parsing"
+            +content: str
+            +is_inline: bool
         }
     }
-    namespace trans {
+
+    namespace transformation_engine {
+        %% Syntax tree manipulation and string transformation
         class StringTransformer {
-            <<Abstract>>
-            Base class for transformers
+            %% Source: context #1 - trans.py
+            %% Context #2: "syntax tree manipulation and string transformation utilities"
+            +transform()$ : str
         }
-        class StringMerger {
-            Merges adjacent strings
+
+        class Node {
+            %% Source: context #1 - nodes.py
+            %% Context #2: "syntax tree manipulation"
+            +children: List
+            +type: str
         }
-        class CannotTransform {
-            Base error class
-        }
-    }
-    namespace lines {
-        class RHSResult {
-            Stores split results
-        }
-        class LinesBlock {
-            Holds formatted lines
-        }
-        class ProtoComment {
-            Comment representation
+
+        class StringUtilities {
+            %% Source: context #1 - strings.py
+            %% Context #2: "string transformation utilities"
+            +normalize()
+            +split_string()$ : List
         }
     }
-    namespace visitors {
-        class Visitor {
-            AST traversal base
+
+    namespace configuration_management {
+        %% Configuration management for Python versions
+        class Mode {
+            %% Source: context #1 - mode.py
+            %% Context #2: "configuration management for Python versions"
+            +python_version: str
+            +target_versions: Set
         }
-        class DebugVisitor {
-            Debug AST printer
+
+        class Config {
+            %% Source: context #1 - __init__.py (implied)
+            %% Context #2: configuration management
+            +target_versions: Set
+            +line_length: int
+            +is_pyi: bool
         }
     }
-    CannotSplit --|> CannotTransform
-    StringMerger --|> StringTransformer
-    DebugVisitor --|> Visitor
-    LineGenerator --> Line
-    LineGenerator --> BracketTracker
-    LineGenerator --> EmptyLineTracker
-    StringTransformer --> CannotTransform
-    Mode --> Feature
-    Mode --> TargetVersion
-    Line --> ProtoComment
-    LinesBlock --> Line
-    RHSResult --> Line
+
+    namespace parsing_utilities {
+        %% Parsing utilities for syntax trees
+        class Parser {
+            %% Source: context #1 - parsing.py
+            %% Context #2: syntax tree manipulation
+            +parse()$ : Node
+        }
+
+        class RangeManager {
+            %% Source: context #1 - ranges.py
+            %% Context #2: "line range parsing and adjustment"
+            +find_leaf_nodes()
+            +parse_line_ranges()
+        }
+    }
+
+    %% Relationships (placed OUTSIDE all namespace blocks)
+    LineGenerator --> Line : generates
+    LineGenerator --> BracketTracker : uses
+    LineGenerator --> Comment : parses
+    LineGenerator --> StringTransformer : transforms
+
+    StringTransformer --> Node : modifies
+    StringTransformer --> StringUtilities : uses
+
+    Config --> Mode : configures
+    LineGenerator --> Config : reads
+
+    Parser --> Node : produces
+    RangeManager --> Node : operates_on
+    BracketTracker --> Node : tracks

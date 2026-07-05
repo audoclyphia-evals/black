@@ -1,0 +1,28 @@
+flowchart TB
+    %% Code Repository Analysis System
+    
+    subgraph Input_Data [Input Data]
+        repo[Repository Structure]
+        features[(Feature Clusters)]
+        deps[Dependencies]
+    end
+    
+    subgraph Code_Graph [Code Graph Data]
+        module_hierarchy[Module Hierarchy]
+        file_summaries[(File Summaries)]
+    end
+    
+    subgraph Analysis_Components [Analysis Components]
+        service_components[Service Components]
+        arch_components[Architecture Components]
+    end
+    
+    %% Relationships
+    repo --> module_hierarchy
+    features --> arch_components
+    deps --> service_components
+    module_hierarchy --> service_components
+    file_summaries --> arch_components
+    
+    %% Internal relationships
+    service_components --> arch_components

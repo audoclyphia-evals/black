@@ -1,0 +1,18 @@
+sequenceDiagram
+    autonumber
+    actor User as "User"
+    participant Service as "Analysis Service"
+    participant Repo as "Repository"
+    participant Clusters as "FeatureClusters"
+    participant Graph as "CodeGraph"
+
+    User->>Service: Request data
+    activate Service
+    Service->>Repo: Get repository structure
+    Repo-->>Service: Return data
+    Service->>Clusters: Fetch feature clusters
+    Clusters-->>Service: Return data
+    Service->>Graph: Get code graph data
+    Graph-->>Service: Return data
+    Service-->>User: Provide results
+    deactivate Service

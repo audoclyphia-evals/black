@@ -1,0 +1,66 @@
+---
+config:
+  layout: elk
+---
+classDiagram
+    %% Simplified parser infrastructure (2 namespaces, 7 classes)
+    %% Core classes merged: Grammar, Parser, Driver, Node, Leaf, PyGram, PyTree
+
+    namespace parser {
+        class Grammar {
+            +symbols: dict
+            +token2id: dict
+            +start: int
+        }
+
+        class Parser {
+            +grammar: Grammar
+        }
+
+        class Driver {
+            +grammar: Grammar
+            +parser: Parser
+        }
+
+        class PyGram {
+            +grammar: Grammar
+        }
+    }
+
+    namespace syntax_tree {
+        class Node {
+            +type: int
+            +value: str
+        }
+
+        class Leaf {
+            +type: int
+            +value: str
+        }
+
+        class PyTree {
+            +node: Node
+        }
+    }
+
+    %% Relationships (outside namespace blocks)
+    Grammar <|-- Parser
+    Grammar <|-- Driver
+    Grammar <|-- PyGram
+    Parser <|-- Driver
+    Node <|-- Leaf
+    Driver --> Parser
+    Driver --> Grammar
+    PyGram --> Grammar
+    PyTree --> Node
+
+    %% Styling
+    classDef parser fill:#e1f5fe,stroke:#01579b
+    classDef tree fill:#fff3e0,stroke:#e65100
+    class Grammar:::parser
+    class Parser:::parser
+    class Driver:::parser
+    class PyGram:::parser
+    class Node:::tree
+    class Leaf:::tree
+    class PyTree:::tree
